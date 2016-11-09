@@ -6,6 +6,15 @@
     this.mvMatrix = null;//mat4.create();
     this.pMatrix = null;//mat4.create();
     
+    this.sceneParams = {
+        angle : 45.0,
+        front : 0.1,
+        back  : 100
+    };
+    this.setSceneParam = function(key, value){
+        parent.sceneParams[key] = value;
+    };
+    
     this.init = function(id){
         parent.mvMatrix = mat4.create();
         parent.pMatrix = mat4.create();
@@ -28,26 +37,42 @@
             parent.gl.viewportHeight = canvas.height;
         }else{
             console.log('Could not initialise WebGL.');
+            return null;
         }
         
+        
+        parent.setShader("resources/shaders/fragment/shader-fs.sx", "fragment");
+        parent.setShader("resources/shaders/vertex/shader-vs.sx", "vertex");
         parent.initShaders();
-        
-        
-        parent.initBuffers();
-        
+
         parent.gl.clearColor(0.0, 0.0, 0.0, 1.0);
         parent.gl.enable(parent.gl.DEPTH_TEST);
-
-        parent.draw();
     };
     this.shaderProgram = null;
+    this.shadersList = null;
+    this.setShader = function(path, type){
+        if(parent.shadersList === null){
+           parent.shadersList = {};
+        }
+        if(type === false){
+            delete parent.shadersList[path];
+        }else{
+            parent.shadersList[path] = type;
+        }
+    };
     this.initShaders = function(){
-        var fShader = parent.getShader("shader-fs");
-        var vShader = parent.getShader("shader-vs");
-        
+        if(parent.shadersList === null){//если шейдеры не заданы, то задаем стандартные
+            parent.shadersList = {
+                "resources/shaders/fragment/shader-fs.sx"   : "fragment",
+                "resources/shaders/vertex/shader-vs.sx"     : "vertex"
+            };
+        }
         parent.shaderProgram = parent.gl.createProgram();
-        parent.gl.attachShader(parent.shaderProgram, vShader);
-        parent.gl.attachShader(parent.shaderProgram, fShader);
+        for(var path in parent.shadersList){
+            var type = parent.shadersList[path];
+            var shader = parent.getShader(path, type);
+            parent.gl.attachShader(parent.shaderProgram, shader);
+        }
         parent.gl.linkProgram(parent.shaderProgram);
         
         if(!parent.gl.getProgramParameter(parent.shaderProgram, 
@@ -62,24 +87,33 @@
         parent.shaderProgram.pMatrixUniform = parent.gl.getUniformLocation(parent.shaderProgram, "uPMatrix");
         parent.shaderProgram.mvMatrixUniform = parent.gl.getUniformLocation(parent.shaderProgram, "uMVMatrix");      
     };
-    this.getShader = function(id){
-        var shaderScript = document.getElementById(id);
-        if(!shaderScript){
+    
+    this.loadShaderCode = function(path){
+        if(typeof path == 'undefined'){
             return null;
         }
-        var str = "";
-        var k = shaderScript.firstChild;
-        while(k){
-            if(k.nodeType == 3){
-                str += k.textContent;
+        var strCode = null;
+        $.ajax({
+            async : false,
+            url   : path,
+            success : function (data){
+                if(data){
+                    strCode = data;
+                }
             }
-            k = k.nextSibling;
+        });
+        return strCode;
+    }
+    
+    this.getShader = function(path, type){
+        var str = parent.loadShaderCode(path);
+        if(str === null){
+            return null;
         }
-        
         var shader;
-        if(shaderScript.type == "x-shader/x-fragment"){
+        if(type === "fragment"){
             shader = parent.gl.createShader(parent.gl.FRAGMENT_SHADER);
-        }else if(shaderScript.type == "x-shader/x-vertex"){
+        }else if(type === "vertex"){
             shader = parent.gl.createShader(parent.gl.VERTEX_SHADER);
         }else{
             return null;
@@ -94,73 +128,159 @@
         }
         return shader;
     };
+
+    this.buffers = [];
     
-    this.tVerPosBuffer = null;
-    this.sVerPositionBuffer = null;
+    this.Buffer = new (function(){
+        this.index = 0;
+        var Buffer = this;
+        this.Add = function(){
+            var index = parent.buffers.length;
+            var buffer = parent.gl.createBuffer();
+            parent.buffers[index] = buffer;
+            Buffer.index = index;
+            return index;
+        };
+        
+        this.SetParams = function(index, itemSize, countItems, type){
+            parent.Buffer.SetCurrent(index);
+            parent.buffers[index].itemSize = itemSize;
+            parent.buffers[index].numItems = countItems;
+            parent.buffers[index].type = type;
+            parent.buffers[index].first = 0;
+        };
+        
+        this.SetCurrent = function(index){
+            parent.gl.bindBuffer(parent.gl.ARRAY_BUFFER, 
+                                parent.buffers[index]);
+            Buffer.index = index;
+        };
+        
+        this.GetCurrent = function(){
+            return parent.buffers[Buffer.index];
+        };
+        
+        this.SetData = function(index, vertices){
+            parent.buffers[index].vertices = vertices;
+            parent.Buffer.SetCurrent(index);
+            parent.gl.bufferData(parent.gl.ARRAY_BUFFER, 
+                    new Float32Array(vertices), 
+                    parent.gl.STATIC_DRAW);
+        };
+        
+        this.SetPosition = function(index, coords){
+            parent.buffers[index].coords = coords;
+        };
+        
+        this.Draw = function(index){
+            parent.Buffer.SetCurrent(index);
+            var curBuffer = parent.Buffer.GetCurrent();
+            
+            parent.m4.Translate(curBuffer.coords);
+            parent.gl.vertexAttribPointer(  parent.shaderProgram.vertexPositionAttribute, 
+                                            curBuffer.itemSize, 
+                                            parent.gl.FLOAT, 
+                                            false, 0, 0);
+            parent.setMatrixUniforms();
+            parent.gl.drawArrays(   curBuffer.type, 
+                                    curBuffer.first, 
+                                    curBuffer.numItems);
+              
+            //необязательная штука, но так как она возвращает в исходную позицию, то считать становится проще
+            parent.m4.Translate([-curBuffer.coords[0], -curBuffer.coords[1], -curBuffer.coords[2]]); 
+        };
+    });
     this.initBuffers = function(){
-        parent.tVerPosBuffer = parent.gl.createBuffer();
-        parent.gl.bindBuffer(parent.gl.ARRAY_BUFFER, 
-                                parent.tVerPosBuffer);
+        var bIndex = parent.Buffer.Add();
+        parent.Buffer.SetParams(bIndex, 3, 3, parent.gl.TRIANGLE_STRIP);
+        
+        parent.Buffer.SetPosition(bIndex, [-1.5, 0.0, -17.0]);
         
         var vertices = [
             0.0,  1.0,  0.0,
            -1.0, -1.0,  0.0,
             1.0, -1.0,  0.0
         ];
-        
-        parent.gl.bufferData(parent.gl.ARRAY_BUFFER, 
-                                new Float32Array(vertices), 
-                                parent.gl.STATIC_DRAW);
-                                
-        parent.tVerPosBuffer.itemSize = 3;
-        parent.tVerPosBuffer.numItems = 3;                    
-        
-        parent.sVerPositionBuffer = parent.gl.createBuffer();
-        parent.gl.bindBuffer(parent.gl.ARRAY_BUFFER, 
-                                parent.sVerPositionBuffer);
-                                
-        vertices = [
-            1.0,  1.0,  0.0,
-           -1.0,  1.0,  0.0,
-            1.0, -1.0,  0.0,
-           -1.0, -1.0,  0.0
-        ];
-        
-        parent.gl.bufferData(parent.gl.ARRAY_BUFFER, 
-                        new Float32Array(vertices), 
-                        parent.gl.STATIC_DRAW);
-        parent.sVerPositionBuffer.itemSize = 3;
-        parent.sVerPositionBuffer.numItems = 4;
+        parent.Buffer.SetData(bIndex, vertices);
     };
     
-    this.draw = function(){
-        parent.gl.viewport(0, 0, 
+    this.Items = new (function(){
+        /*
+         * params = {
+         *      vertices : float[],
+         *      itemSize : int,
+         *      translate: [0.0, 0.0, 0.0],
+         *      type : gl.type (int),
+         * }
+         */
+        this.Add = function(params){
+            var index = parent.Buffer.Add();
+
+            if(typeof params.translate !== 'undefined'){
+                parent.Buffer.SetPosition(index, params.translate);
+            }else{
+                parent.Buffer.SetPosition(index, [0.0, 0.0, 0.0]);
+            }
+            if(typeof params.vertices !== 'undefined' &&
+                    typeof params.itemSize !== 'undefined' &&
+                    typeof params.type !== 'undefined'){
+                var countItem = parseInt(params.vertices.length / params.itemSize);
+                parent.Buffer.SetParams(index, params.itemSize, countItem, params.type);
+                
+                parent.Buffer.SetData(index, params.vertices);
+            }
+            return index;
+        };
+        
+        this.Set = function(index, params){
+            if(typeof params.translate !== 'undefined'){
+                parent.Buffer.SetPosition(index, params.translate);
+            }
+            if(typeof params.vertices !== 'undefined' &&
+                    typeof params.itemSize !== 'undefined' &&
+                    typeof params.type !== 'undefined'){
+                var countItem = parseInt(params.vertices.length / params.itemSize);
+                parent.Buffer.SetParams(index, params.itemSize, countItem, params.type);
+                
+                parent.Buffer.SetData(index, params.vertices);
+            }
+            return index;           
+        };
+    });
+    
+    
+    this.m4 = new (function(){
+        this.Translate = function(coords){
+            mat4.translate(parent.mvMatrix, coords);
+        };
+        this.Percpective = function(){
+            mat4.perspective(parent.sceneParams.angle, parent.gl.viewportWidth / parent.gl.viewportHeight,
+                            parent.sceneParams.front, parent.sceneParams.back, parent.pMatrix);
+        };
+        this.Identity = function(){
+            mat4.identity(parent.mvMatrix);
+        };
+        
+        this.Start = function(){
+            parent.m4.Percpective();
+            parent.m4.Identity();
+        };
+    });
+    this.Draw = new (function(){
+        this.Start =  function(){
+            parent.gl.viewport(0, 0, 
                             parent.gl.viewportWidth, parent.gl.viewportHeight);
                             
-        parent.gl.clear(parent.gl.COLOR_BUFFER_BIT | parent.gl.DEPTH_BUFFER_BIT);
-        
-        mat4.perspective(45, parent.gl.viewportWidth / parent.gl.viewportHeight,
-                            0.1, 100.0, parent.pMatrix);
-                            
-        mat4.identity(parent.mvMatrix);
-        
-        
-        mat4.translate(parent.mvMatrix, [-1.5, 0.0, -7.0]);
-        parent.gl.bindBuffer(parent.gl.ARRAY_BUFFER, parent.tVerPosBuffer);
-        parent.gl.vertexAttribPointer(parent.shaderProgram.vertexPositionAttribute, parent.tVerPosBuffer.itemSize, parent.gl.FLOAT, false, 0, 0);
-        parent.setMatrixUniforms();
-        parent.gl.drawArrays(parent.gl.TRIANGLES, 0, parent.tVerPosBuffer.numItems);
-        
-        
-        
-        mat4.translate(parent.mvMatrix, [3.0, 0.0, 0.0]);
-        parent.gl.bindBuffer(parent.gl.ARRAY_BUFFER, parent.sVerPositionBuffer);
-        parent.gl.vertexAttribPointer(parent.shaderProgram.vertexPositionAttribute, parent.sVerPositionBuffer.itemSize, parent.gl.FLOAT, false, 0, 0);
-        parent.setMatrixUniforms();
-        parent.gl.drawArrays(parent.gl.TRIANGLE_STRIP, 0, parent.sVerPositionBuffer.numItems);
-        
-        
-    };
+            parent.gl.clear(parent.gl.COLOR_BUFFER_BIT | parent.gl.DEPTH_BUFFER_BIT);
+            parent.m4.Start();
+        };
+        this.Exec = function(){
+            parent.Draw.Start();
+            for(var i in parent.buffers){
+                parent.Buffer.Draw(i);
+            }
+        };
+    });
     this.setMatrixUniforms = function() {
         parent.gl.uniformMatrix4fv(parent.shaderProgram.pMatrixUniform, false, parent.pMatrix);
         parent.gl.uniformMatrix4fv(parent.shaderProgram.mvMatrixUniform, false, parent.mvMatrix);
