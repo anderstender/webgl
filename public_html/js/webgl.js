@@ -3,10 +3,13 @@
     this.gl = null;
     var parent = this;
     
-    this.mvMatrix = mat4.create();
-    this.pMatrix = mat4.create();
+    this.mvMatrix = null;//mat4.create();
+    this.pMatrix = null;//mat4.create();
     
     this.init = function(id){
+        parent.mvMatrix = mat4.create();
+        parent.pMatrix = mat4.create();
+        
         var canvas = document.getElementById(id);
         if(!canvas){
             return false;
