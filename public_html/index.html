@@ -12,24 +12,6 @@ and open the template in the editor.
         <script type="text/javascript" src="js/jquery.min.js"></script>
         <script type="text/javascript" src="js/glMatrix.min.js"></script>
         <script type="text/javascript" src="js/webgl.js"></script>
-        <script id="shader-fs" type="x-shader/x-fragment">
-            precision mediump float;
-
-            void main(void) {
-                gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-            }
-        </script>
-
-        <script id="shader-vs" type="x-shader/x-vertex">
-            attribute vec3 aVertexPosition;
-
-            uniform mat4 uMVMatrix;
-            uniform mat4 uPMatrix;
-
-            void main(void) {
-                gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
-            }
-        </script>
     </head>
     <body>
         <canvas id="webgl_box" style="
@@ -38,12 +20,32 @@ and open the template in the editor.
             " width="500" height="500"></canvas>
             
         <script type="text/javascript">
-            
-            document.body.onload = function(){
+
                 var w = new WebGL();
-                console.log(w.init('webgl_box'));
-            };
-            
+                w.init('webgl_box');
+                var index = w.Items.Add({
+                    vertices : [
+                            0.0,  1.0,  0.0,
+                           -1.0, -1.0,  0.0,
+                            1.0, -1.0,  0.0],
+                    type : w.gl.TRIANGLE_STRIP,
+                    itemSize : 3,
+                    translate : [-1.5, 0.0, -17.0]
+                });
+                
+                
+                w.Draw.Exec();
+                w.Items.Add( {
+                    vertices : [
+                            0.0,  1.0,  0.0,
+                           -1.0, -1.0,  0.0,
+                            1.0, -1.0,  0.0,
+                            0.0,  1.0,  0.0],
+                    type : w.gl.LINE_STRIP,
+                    itemSize : 3,
+                    translate : [-3.5, 0.0, -27.0]
+                });
+                w.Draw.Exec();
         </script>
     </body>
 </html>
