@@ -28,20 +28,38 @@ and open the template in the editor.
                             0.0,  1.0,  0.0,
                            -1.0, -1.0,  0.0,
                             1.0, -1.0,  0.0],
-                    type : w.gl.TRIANGLE_STRIP,
-                    itemSize : 3,
+                    colors : [
+                            1.0, 0.0, 0.0, 1.0,
+                            0.0, 1.0, 0.0, 1.0,
+                            0.0, 0.0, 1.0, 1.0],
+                    gl_type : w.gl.TRIANGLE_STRIP,
                     translate : [-1.5, 0.0, -17.0]
                 });
-                
+                w.Items.Set(index,{
+                    vertices : [
+                            0.0,  1.0,  0.0,
+                           -1.0, -1.0,  0.0,
+                            1.0, -1.0,  0.0],
+                    colors : [
+                            0.0, 0.0, 0.0, 1.0,
+                            0.0, 1.0, 0.0, 1.0,
+                            0.0, 0.0, 1.0, 1.0],
+                    gl_type : w.gl.TRIANGLE_STRIP,
+                    translate : [-1.5, 0.0, -17.0]
+                });
                 var index2 = w.Items.Add( {
                     vertices : [
                             0.0,  1.0,  0.0,
                            -1.0, -1.0,  0.0,
                             1.0, -1.0,  0.0,
                             0.0,  1.0,  0.0],
-                    type : w.gl.LINE_STRIP,
-                    itemSize : 3,
-                    translate : [-3.5, 0.0, -27.0]
+                    colors : [
+                            1.0, 0.0, 0.0, 1.0,
+                            0.0, 1.0, 0.0, 1.0,
+                            0.0, 0.0, 1.0, 1.0,
+                            1.0, 0.0, 0.0, 1.0],
+                    gl_type : w.gl.LINE_STRIP,
+                    translate : [-12.5, 0.0, -27.0]
                 });
                 w.Draw.Exec();
         </script>
