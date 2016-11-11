@@ -42,8 +42,8 @@
         
         parent.Shader.Init();
 
-        parent.gl.clearColor(0.0, 0.0, 0.0, 1.0);
-        parent.gl.enable(parent.gl.DEPTH_TEST);
+        /*parent.gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        parent.gl.enable(parent.gl.DEPTH_TEST);*/
     };
     this.shaderProgram = null;
     this.shadersList = null;
@@ -131,6 +131,8 @@
 
             parent.shaderProgram.pMatrixUniform = parent.gl.getUniformLocation(parent.shaderProgram, "uPMatrix");
             parent.shaderProgram.mvMatrixUniform = parent.gl.getUniformLocation(parent.shaderProgram, "uMVMatrix");
+            
+            
         };
     });
 
@@ -245,6 +247,29 @@
         };
     });
 
+    this.glItems = new (function(){
+        var Items = this;
+        this.list = [];
+        this.Add = function(glItem){
+            var index = Items.list.length;
+            Items.list[index] = glItem;
+            return index;
+        };
+        
+        this.Item = function(index){
+            return Items.list[index];
+        };
+        
+        this.Remove = function(index){
+            delete Items.list[index];
+        };
+        
+        this.Draw = function(index){
+            Items.list[index].Draw(parent);
+        };
+    });
+    
+    
     
     this.Items = new (function(){
         /*
@@ -307,6 +332,9 @@
     });
     this.Draw = new (function(){
         this.Start =  function(){
+            parent.gl.clearColor(0.0, 0.0, 0.0, 1.0);
+            parent.gl.enable(parent.gl.DEPTH_TEST);
+            
             parent.gl.viewport(0, 0, 
                             parent.gl.viewportWidth, parent.gl.viewportHeight);
                             
@@ -315,8 +343,9 @@
         };
         this.Exec = function(){
             parent.Draw.Start();
-            for(var i in parent.buffers){
-                parent.Buffer.Draw(i);
+            parent.m4.Translate([0.0,0.0, -19]);
+            for(var i in parent.glItems.list){
+                parent.glItems.Draw(i);
             }
         };
     });

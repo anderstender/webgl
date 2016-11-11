@@ -12,6 +12,7 @@ and open the template in the editor.
         <script type="text/javascript" src="js/jquery.min.js"></script>
         <script type="text/javascript" src="js/glMatrix.min.js"></script>
         <script type="text/javascript" src="js/webgl.js"></script>
+        <script type="text/javascript" src="js/items.js"></script>
     </head>
     <body>
         <canvas id="webgl_box" style="
@@ -23,44 +24,19 @@ and open the template in the editor.
 
                 var w = new WebGL();
                 w.init('webgl_box');
-                var index = w.Items.Add({
-                    vertices : [
-                            0.0,  1.0,  0.0,
-                           -1.0, -1.0,  0.0,
-                            1.0, -1.0,  0.0],
-                    colors : [
-                            1.0, 0.0, 0.0, 1.0,
-                            0.0, 1.0, 0.0, 1.0,
-                            0.0, 0.0, 1.0, 1.0],
-                    gl_type : w.gl.TRIANGLE_STRIP,
-                    translate : [-1.5, 0.0, -17.0]
-                });
-                w.Items.Set(index,{
-                    vertices : [
-                            0.0,  1.0,  0.0,
-                           -1.0, -1.0,  0.0,
-                            1.0, -1.0,  0.0],
-                    colors : [
-                            0.0, 0.0, 0.0, 1.0,
-                            0.0, 1.0, 0.0, 1.0,
-                            0.0, 0.0, 1.0, 1.0],
-                    gl_type : w.gl.TRIANGLE_STRIP,
-                    translate : [-1.5, 0.0, -17.0]
-                });
-                var index2 = w.Items.Add( {
-                    vertices : [
-                            0.0,  1.0,  0.0,
-                           -1.0, -1.0,  0.0,
-                            1.0, -1.0,  0.0,
-                            0.0,  1.0,  0.0],
-                    colors : [
-                            1.0, 0.0, 0.0, 1.0,
-                            0.0, 1.0, 0.0, 1.0,
-                            0.0, 0.0, 1.0, 1.0,
-                            1.0, 0.0, 0.0, 1.0],
-                    gl_type : w.gl.LINE_STRIP,
-                    translate : [-12.5, 0.0, -27.0]
-                });
+                
+                var item = new GLItem(w);
+                item.Vertices.Set([ 0.0,  1.0,  0.0,
+                                   -1.0, -1.0,  0.0,
+                                    1.0, -1.0,  0.0],
+                                    w.gl.TRIANGLE_STRIP);
+                item.Colors.Set([   1.0, 0.0, 0.0, 1.0,
+                                    0.0, 1.0, 0.0, 1.0,
+                                    0.0, 0.0, 1.0, 1.0]);
+                console.log(item);
+                w.glItems.Add(item);
+
+
                 w.Draw.Exec();
         </script>
     </body>
