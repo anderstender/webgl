@@ -9,8 +9,6 @@ var GLItem = function(gl){
     this.gl = gl;
     this.mvMatrix = mat4.create();
     this.pMatrix = mat4.create();
-    this.Draw = function(){
-    };
     this.Vertices = new (function(){
         var Vertices = this;
         this.coords = [];
@@ -48,7 +46,12 @@ var GLItem = function(gl){
         var Position = this;
         this.coords = [0.0, 0.0, 0.0];
         this.Set = function(coords){
-            Position.coords = coords;
+            
+            
+                Position.coords[0] += coords[0];
+                Position.coords[1] += coords[1];
+                Position.coords[2] += coords[2];
+            
         };
     });
     
@@ -62,6 +65,7 @@ var GLItem = function(gl){
         this.center = Parent.Position.coords;
         
         this.Set = function(angle, coords, center){
+            //if(typeof Childs !== 'undefi')
             Rotate.angle = angle;
             Rotate.coords = coords;
             if(typeof center !== 'undefined'){
@@ -70,4 +74,27 @@ var GLItem = function(gl){
         };
         
     });
+    
+    this.Childs = new(function(){
+        var Childs = this;
+        this.list =[];
+        this.Add = function(glItem){
+            var index = Childs.list.length;
+            Childs.list[index] = glItem;
+            
+            Childs.list[index].mvMatrix = Parent.mvMatrix;
+            Childs.list[index].pMatrix  = Parent.pMatrix;
+            
+            Childs.list[index].Position.Set(Parent.Position.coords);
+            //Childs.list[index].Rotate = Parent.Rotate;
+            
+            return index;
+        };
+        
+        
+        this.Get = function(index){
+            return Childs.list[index];
+        };
+    });
+    
 };
