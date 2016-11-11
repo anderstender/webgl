@@ -9,7 +9,7 @@
     this.sceneParams = {
         angle : 45.0,
         front : 0.1,
-        back  : 100
+        back  : 200
     };
     this.setSceneParam = function(key, value){
         parent.sceneParams[key] = value;
@@ -149,11 +149,7 @@
         this.Remove = function(index){
             delete Items.list[index];
         };
-        
-        this.Draw = function(index){
-            
-            var Item = parent.Items.Get(index);
-            
+        this.rDraw = function(Item, Parent){
             mat4.perspective(parent.sceneParams.angle, parent.gl.viewportWidth / parent.gl.viewportHeight,
                             parent.sceneParams.front, parent.sceneParams.back, Item.pMatrix);
             mat4.identity(Item.mvMatrix);
@@ -193,10 +189,10 @@
                                             false, 0, 0);
                                       
             
-            parent.Items.setMatUniform(index);                                
+            parent.Items.setMatUniform(Item);                                
             parent.gl.drawArrays(Item.Vertices.glType, 
-                                0, 
-                                Item.Vertices.buffer.numItems);
+                                    0, 
+                                    Item.Vertices.buffer.numItems);
             
             
             mat4.rotate(Item.Rotate.matrix, 
@@ -207,68 +203,18 @@
             mat4.translate(Item.mvMatrix, [   -Item.Position.coords[0], 
                                                 -Item.Position.coords[1], 
                                                 -Item.Position.coords[2]]);
-                                            
-            for(var i in Items.Get(index).Childs.list){
-                Item = Items.Get(index).Childs.Get(i);
-                mat4.perspective(parent.sceneParams.angle, parent.gl.viewportWidth / parent.gl.viewportHeight,
-                            parent.sceneParams.front, parent.sceneParams.back, Item.pMatrix);
-                mat4.identity(Item.mvMatrix);
-
-
-
-                mat4.translate(Item.mvMatrix, Item.Position.coords);
-                mat4.rotate(Item.Rotate.matrix, Item.Rotate.angle, Item.Rotate.coords);
-                mat4.multiply(Item.mvMatrix, Item.Rotate.matrix);
-
-
-                //ставим координаты вершин
-                parent.gl.bindBuffer(parent.gl.ARRAY_BUFFER, 
-                                        Item.Vertices.buffer);
-
-                parent.gl.bufferData(parent.gl.ARRAY_BUFFER, 
-                                        new Float32Array(Item.Vertices.coords), 
-                                        parent.gl.STATIC_DRAW);
-
-                parent.gl.vertexAttribPointer(parent.shaderProgram.vertexPositionAttribute, 
-                                                Item.Vertices.buffer.itemSize, 
-                                                parent.gl.FLOAT, false, 0, 0);
-
-                //натягиваем цвет                             
-                parent.gl.bindBuffer(parent.gl.ARRAY_BUFFER, 
-                                    Item.Colors.buffer);  
-
-                parent.gl.bufferData(parent.gl.ARRAY_BUFFER, 
-                                    new Float32Array(Item.Colors.coords), 
-                                    parent.gl.STATIC_DRAW);
-
-
-
-                parent.gl.vertexAttribPointer(  parent.shaderProgram.vertexColorAttribute, 
-                                                Item.Colors.buffer.itemSize, 
-                                                parent.gl.FLOAT, 
-                                                false, 0, 0);
-
-
-                parent.Items.setMatUniform(index);                                
-                parent.gl.drawArrays(Item.Vertices.glType, 
-                                    0, 
-                                    Item.Vertices.buffer.numItems);
-
-
-                mat4.rotate(Item.Rotate.matrix, 
-                            -Item.Rotate.angle, 
-                            [Item.Rotate.coords[0], Item.Rotate.coords[1], Item.Rotate.coords[2]]);
-                mat4.multiply(Item.mvMatrix, Item.Rotate.matrix);
-
-                mat4.translate(Item.mvMatrix, [   -Item.Position.coords[0], 
-                                                    -Item.Position.coords[1], 
-                                                    -Item.Position.coords[2]]);
-            }
-            
+             for(var i in Item.Childs.list){
+                 parent.Items.rDraw(Item.Childs.Get(i));
+             }
         };
         
-        this.setMatUniform = function(index){
+        this.Draw = function(index){
             var Item = parent.Items.Get(index);
+            parent.Items.rDraw(Item);
+        };
+        
+        this.setMatUniform = function(Item){
+            //var Item = parent.Items.Get(index);
             parent.gl.uniformMatrix4fv(parent.shaderProgram.pMatrixUniform, false, Item.pMatrix);
             parent.gl.uniformMatrix4fv(parent.shaderProgram.mvMatrixUniform, false, Item.mvMatrix);
         };
@@ -306,7 +252,7 @@
         };
         this.Exec = function(){
             parent.Draw.Start();
-            parent.m4.Translate([0.0,0.0, -5]);
+            //parent.m4.Translate([0.0,0.0, -5]);
             
             
             for(var i in parent.Items.list){
