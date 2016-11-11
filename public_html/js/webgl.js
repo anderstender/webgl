@@ -265,10 +265,15 @@
             
             var Item = parent.Items.Get(index);
             
+            mat4.perspective(parent.sceneParams.angle, parent.gl.viewportWidth / parent.gl.viewportHeight,
+                            parent.sceneParams.front, parent.sceneParams.back, Item.pMatrix);
+            mat4.identity(Item.mvMatrix);
             
-            mat4.translate(parent.mvMatrix, Item.Position.coords);
+            
+            
+            mat4.translate(Item.mvMatrix, Item.Position.coords);
             mat4.rotate(Item.Rotate.matrix, Item.Rotate.angle, Item.Rotate.coords);
-            mat4.multiply(parent.mvMatrix, Item.Rotate.matrix);
+            mat4.multiply(Item.mvMatrix, Item.Rotate.matrix);
             
             
             //ставим координаты вершин
@@ -294,12 +299,12 @@
 
 
             parent.gl.vertexAttribPointer(  parent.shaderProgram.vertexColorAttribute, 
-                                        Item.Colors.buffer.itemSize, 
-                                        parent.gl.FLOAT, 
-                                        false, 0, 0);
+                                            Item.Colors.buffer.itemSize, 
+                                            parent.gl.FLOAT, 
+                                            false, 0, 0);
                                       
             
-            parent.setMatrixUniforms();                                
+            parent.Items.setMatUniform(index);                                
             parent.gl.drawArrays(Item.Vertices.glType, 
                                 0, 
                                 Item.Vertices.buffer.numItems);
@@ -308,12 +313,18 @@
             mat4.rotate(Item.Rotate.matrix, 
                         -Item.Rotate.angle, 
                         [Item.Rotate.coords[0], Item.Rotate.coords[1], Item.Rotate.coords[2]]);
-            mat4.multiply(parent.mvMatrix, Item.Rotate.matrix);
+            mat4.multiply(Item.mvMatrix, Item.Rotate.matrix);
             
-            mat4.translate(parent.mvMatrix, [   -Item.Position.coords[0], 
+            mat4.translate(Item.mvMatrix, [   -Item.Position.coords[0], 
                                                 -Item.Position.coords[1], 
                                                 -Item.Position.coords[2]]);
             
+        };
+        
+        this.setMatUniform = function(index){
+            var Item = parent.Items.Get(index);
+            parent.gl.uniformMatrix4fv(parent.shaderProgram.pMatrixUniform, false, Item.pMatrix);
+            parent.gl.uniformMatrix4fv(parent.shaderProgram.mvMatrixUniform, false, Item.mvMatrix);
         };
     });
     
@@ -357,6 +368,8 @@
             }
         };
     });
+    
+    
     this.setMatrixUniforms = function() {
         parent.gl.uniformMatrix4fv(parent.shaderProgram.pMatrixUniform, false, parent.pMatrix);
         parent.gl.uniformMatrix4fv(parent.shaderProgram.mvMatrixUniform, false, parent.mvMatrix);

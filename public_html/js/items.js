@@ -7,8 +7,8 @@
 var GLItem = function(gl){
     var Parent = this;
     this.gl = gl;
-    
-    
+    this.mvMatrix = mat4.create();
+    this.pMatrix = mat4.create();
     this.Draw = function(){
     };
     this.Vertices = new (function(){

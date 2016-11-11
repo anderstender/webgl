@@ -48,7 +48,7 @@ and open the template in the editor.
                 w.Items.Get(i2).Colors.Set([    1.0, 0.0, 0.0, 1.0,
                                                 0.0, 1.0, 0.0, 1.0,
                                                 0.0, 0.0, 1.0, 1.0]);
-                w.Items.Get(i2).Position.Set([1.0, 0.0, -70.0]);
+                w.Items.Get(i2).Position.Set([1.0, 0.0, -40.0]);
                 
                 
                 
@@ -57,7 +57,7 @@ and open the template in the editor.
                     a += 0.1;
                     w.Items.Get(i).Rotate.Set(a, [1, 1, 1]);
                     
-                    w.Items.Get(i2).Rotate.Set(a, [1, 1, 1]);
+                    w.Items.Get(i2).Rotate.Set(-a, [1, 1, 1]);
                     w.Draw.Exec();
                 }, 20);
         </script>
