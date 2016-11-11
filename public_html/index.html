@@ -24,20 +24,42 @@ and open the template in the editor.
 
                 var w = new WebGL();
                 w.init('webgl_box');
+                var i = w.Items.Add(new GLItem(w.gl));
+
+                w.Items.Get(i).Vertices.Set([0.0,  1.0,  0.0,
+                                            -1.0, -1.0,  0.0,
+                                             1.0, -1.0,  0.0],
+                                             w.gl.TRIANGLE_STRIP);
+                w.Items.Get(i).Colors.Set([ 1.0, 0.0, 0.0, 1.0,
+                                            0.0, 1.0, 0.0, 1.0,
+                                            0.0, 0.0, 1.0, 1.0]);
+                w.Items.Get(i).Position.Set([-1.0, 0.0, -80.0]);
+                 
                 
-                var item = new GLItem(w);
-                item.Vertices.Set([ 0.0,  1.0,  0.0,
-                                   -1.0, -1.0,  0.0,
-                                    1.0, -1.0,  0.0],
-                                    w.gl.TRIANGLE_STRIP);
-                item.Colors.Set([   1.0, 0.0, 0.0, 1.0,
-                                    0.0, 1.0, 0.0, 1.0,
-                                    0.0, 0.0, 1.0, 1.0]);
-                console.log(item);
-                w.glItems.Add(item);
+                
+                
+                
+                var i2 = w.Items.Add(new GLItem(w.gl));
 
-
-                w.Draw.Exec();
+                w.Items.Get(i2).Vertices.Set([0.0,  1.0,  0.0,
+                                            -1.0, -1.0,  0.0,
+                                             1.0, -1.0,  0.0],
+                                             w.gl.TRIANGLE_STRIP);
+                w.Items.Get(i2).Colors.Set([    1.0, 0.0, 0.0, 1.0,
+                                                0.0, 1.0, 0.0, 1.0,
+                                                0.0, 0.0, 1.0, 1.0]);
+                w.Items.Get(i2).Position.Set([1.0, 0.0, -70.0]);
+                
+                
+                
+                var a = 0;
+                setInterval(function(){
+                    a += 0.1;
+                    w.Items.Get(i).Rotate.Set(a, [1, 1, 1]);
+                    
+                    w.Items.Get(i2).Rotate.Set(a, [1, 1, 1]);
+                    w.Draw.Exec();
+                }, 20);
         </script>
     </body>
 </html>

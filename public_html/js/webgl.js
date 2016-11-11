@@ -41,9 +41,6 @@
         }
         
         parent.Shader.Init();
-
-        /*parent.gl.clearColor(0.0, 0.0, 0.0, 1.0);
-        parent.gl.enable(parent.gl.DEPTH_TEST);*/
     };
     this.shaderProgram = null;
     this.shadersList = null;
@@ -247,7 +244,7 @@
         };
     });
 
-    this.glItems = new (function(){
+    this.Items = new (function(){
         var Items = this;
         this.list = [];
         this.Add = function(glItem){
@@ -256,7 +253,7 @@
             return index;
         };
         
-        this.Item = function(index){
+        this.Get = function(index){
             return Items.list[index];
         };
         
@@ -265,52 +262,61 @@
         };
         
         this.Draw = function(index){
-            Items.list[index].Draw(parent);
-        };
-    });
-    
-    
-    
-    this.Items = new (function(){
-        /*
-         * params = {
-         *      vertices : float[],
-         *      itemSize : int,
-         *      translate: [0.0, 0.0, 0.0],
-         *      type : gl.type (int),
-         * }
-         */
-        this.Add = function(params){
-            var index = parent.Buffer.Add();
+            
+            var Item = parent.Items.Get(index);
+            
+            
+            mat4.translate(parent.mvMatrix, Item.Position.coords);
+            mat4.rotate(Item.Rotate.matrix, Item.Rotate.angle, Item.Rotate.coords);
+            mat4.multiply(parent.mvMatrix, Item.Rotate.matrix);
+            
+            
+            //ставим координаты вершин
+            parent.gl.bindBuffer(parent.gl.ARRAY_BUFFER, 
+                                    Item.Vertices.buffer);
+                                    
+            parent.gl.bufferData(parent.gl.ARRAY_BUFFER, 
+                                    new Float32Array(Item.Vertices.coords), 
+                                    parent.gl.STATIC_DRAW);
 
-            if(typeof params.translate !== 'undefined'){
-                parent.Buffer.SetPosition(index, params.translate);
-            }else{
-                parent.Buffer.SetPosition(index, [0.0, 0.0, 0.0]);
-            }
-            if(typeof params.vertices !== 'undefined' &&
-                    typeof params.gl_type !== 'undefined'){
-                var countItem = parseInt(params.vertices.length / 3);
-                parent.Buffer.SetParams(index, 3, countItem, params.gl_type);
-                parent.Buffer.SetData(index, params.vertices, params.colors);
-            }
-            return index;
-        };
-        
-        this.Set = function(index, params){
-            if(typeof params.translate !== 'undefined'){
-                parent.Buffer.SetPosition(index, params.translate);
-            }
-            if(typeof params.vertices !== 'undefined' &&
-                    typeof params.gl_type !== 'undefined'){
-                var countItem = parseInt(params.vertices.length / 3);
-                parent.Buffer.SetParams(index, 3, countItem, params.gl_type);
-                
-                parent.Buffer.SetData(index, params.vertices, params.colors);
-            }
-            return index;           
+            parent.gl.vertexAttribPointer(parent.shaderProgram.vertexPositionAttribute, 
+                                            Item.Vertices.buffer.itemSize, 
+                                            parent.gl.FLOAT, false, 0, 0);
+                                    
+            //натягиваем цвет                             
+            parent.gl.bindBuffer(parent.gl.ARRAY_BUFFER, 
+                                Item.Colors.buffer);  
+
+            parent.gl.bufferData(parent.gl.ARRAY_BUFFER, 
+                                new Float32Array(Item.Colors.coords), 
+                                parent.gl.STATIC_DRAW);
+
+
+
+            parent.gl.vertexAttribPointer(  parent.shaderProgram.vertexColorAttribute, 
+                                        Item.Colors.buffer.itemSize, 
+                                        parent.gl.FLOAT, 
+                                        false, 0, 0);
+                                      
+            
+            parent.setMatrixUniforms();                                
+            parent.gl.drawArrays(Item.Vertices.glType, 
+                                0, 
+                                Item.Vertices.buffer.numItems);
+            
+            
+            mat4.rotate(Item.Rotate.matrix, 
+                        -Item.Rotate.angle, 
+                        [Item.Rotate.coords[0], Item.Rotate.coords[1], Item.Rotate.coords[2]]);
+            mat4.multiply(parent.mvMatrix, Item.Rotate.matrix);
+            
+            mat4.translate(parent.mvMatrix, [   -Item.Position.coords[0], 
+                                                -Item.Position.coords[1], 
+                                                -Item.Position.coords[2]]);
+            
         };
     });
+    
     
     
     this.m4 = new (function(){
@@ -343,9 +349,11 @@
         };
         this.Exec = function(){
             parent.Draw.Start();
-            parent.m4.Translate([0.0,0.0, -19]);
-            for(var i in parent.glItems.list){
-                parent.glItems.Draw(i);
+            parent.m4.Translate([0.0,0.0, -5]);
+            
+            
+            for(var i in parent.Items.list){
+                parent.Items.Draw(i);
             }
         };
     });

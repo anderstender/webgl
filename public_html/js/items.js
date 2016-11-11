@@ -4,61 +4,28 @@
  * лучше отдельно задавать свойства объекта, а потом внутри ядра их обрабатывать
  * чем париться со сложной логикой
  */
-var GLItem = function(context){
+var GLItem = function(gl){
     var Parent = this;
-    this.gl = null;
-    this.shaderProgram = null;
-    this.Context = context;
+    this.gl = gl;
+    
+    
     this.Draw = function(){
-
-
-        Parent.Context.gl.bindBuffer(Parent.Context.gl.ARRAY_BUFFER, 
-                                    Parent.Vertices.buffer);
-                                    
-        Parent.Context.gl.bufferData(Parent.Context.gl.ARRAY_BUFFER, 
-                                    new Float32Array(Parent.Vertices.coords), 
-                                    Parent.Context.gl.STATIC_DRAW);
-                                    
-        Parent.Vertices.buffer.itemSize = Parent.Vertices.itemSize;
-        Parent.Vertices.buffer.numItems = Parent.Vertices.numItems;
-             
-             
-        Parent.Context.gl.vertexAttribPointer(Parent.Context.shaderProgram.vertexPositionAttribute, 
-                                        Parent.Vertices.buffer.itemSize, 
-                                        Parent.Context.gl.FLOAT, false, 0, 0);
-                                    
-        //натягиваем цвет                             
-        Parent.Context.gl.bindBuffer(Parent.Context.gl.ARRAY_BUFFER, 
-                                Parent.Colors.buffer);  
-
-        Parent.Context.gl.bufferData(Parent.Context.gl.ARRAY_BUFFER, 
-                                new Float32Array(Parent.Colors.coords), 
-                                Parent.Context.gl.STATIC_DRAW);
-        Parent.Colors.buffer.itemSize = Parent.Colors.itemSize;
-        Parent.Colors.buffer.numItems = Parent.Colors.numItems;
-
-
-        Parent.Context.gl.vertexAttribPointer(  Parent.Context.shaderProgram.vertexColorAttribute, 
-                                        Parent.Colors.buffer.itemSize, 
-                                        Parent.Context.gl.FLOAT, 
-                                        false, 0, 0);
-                                        
-        Parent.Context.setMatrixUniforms();                                
-        Parent.Context.gl.drawArrays(Parent.Vertices.glType, 
-                                0, 
-                                Parent.Vertices.buffer.numItems);
     };
     this.Vertices = new (function(){
         var Vertices = this;
         this.coords = [];
         this.numItems = 0;
         this.itemSize = 3;
-        this.buffer = context.gl.createBuffer();;
+        this.buffer = Parent.gl.createBuffer();
         this.glType = null;
         
         this.Set = function(coords, glType){
             Vertices.coords = coords;
             Vertices.numItems = parseInt(Vertices.coords.length / Vertices.itemSize);
+            
+            Vertices.buffer.numItems = Vertices.numItems;
+            Vertices.buffer.itemSize = Vertices.itemSize;
+            
             Vertices.glType = glType;
         };
     });
@@ -67,10 +34,14 @@ var GLItem = function(context){
         this.coords = [];
         this.numItems = 0;
         this.itemSize = 4;
-        this.buffer = context.gl.createBuffer();;
+        this.buffer = Parent.gl.createBuffer();
+        
         this.Set = function(coords){
             Colors.coords = coords;
             Colors.numItems = parseInt(Colors.coords.length / Colors.itemSize);
+            
+            Colors.buffer.numItems = Colors.numItems;
+            Colors.buffer.itemSize = Colors.itemSize;
         };
     });
     this.Position = new (function(){
@@ -79,5 +50,24 @@ var GLItem = function(context){
         this.Set = function(coords){
             Position.coords = coords;
         };
+    });
+    
+    this.Rotate = new (function(){
+        var Rotate = this;
+        this.matrix = mat4.create();
+        mat4.identity(this.matrix);
+        
+        this.angle = 0;
+        this.coords = [0, 0, 0];
+        this.center = Parent.Position.coords;
+        
+        this.Set = function(angle, coords, center){
+            Rotate.angle = angle;
+            Rotate.coords = coords;
+            if(typeof center !== 'undefined'){
+                Rotate.center = center;
+            }
+        };
+        
     });
 };
