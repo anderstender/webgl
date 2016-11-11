@@ -86,7 +86,7 @@ var GLItem = function(gl){
             Childs.list[index].pMatrix  = Parent.pMatrix;
             
             Childs.list[index].Position.Set(Parent.Position.coords);
-            //Childs.list[index].Rotate = Parent.Rotate;
+            Childs.list[index].Rotate = Parent.Rotate;
             
             return index;
         };

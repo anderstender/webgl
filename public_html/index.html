@@ -37,18 +37,19 @@ and open the template in the editor.
                  
                  
                 var chI = w.Items.Get(i).Childs.Add(new GLItem(w.gl));
+                
                 var child = w.Items.Get(i).Childs.Get(chI);
                 
-                child.Vertices.Set([0.0,  1.0,  0.0,
-                                            -1.0, -1.0,  0.0,
-                                             1.0, -1.0,  0.0],
+                child.Vertices.Set(         [0.0,  1.0,  10.0,
+                                            -1.0, -1.0,  -10.0,
+                                             1.0, -1.0,  10.0],
                                              w.gl.TRIANGLE_STRIP);
                 
                 
                 child.Colors.Set( [ 1.0, 0.0, 0.0, 1.0,
                                     0.0, 1.0, 0.0, 1.0,
                                     0.0, 0.0, 1.0, 1.0]);
-                child.Position.Set([1.0,10.0,10.0]);
+                child.Position.Set([0.0,0.0,0.0]);
                 child.Rotate.Set(10.0, [1,1,10]);
                 
                 
