@@ -13,6 +13,35 @@ and open the template in the editor.
         <script type="text/javascript" src="js/glMatrix.min.js"></script>
         <script type="text/javascript" src="js/webgl.js"></script>
         <script type="text/javascript" src="js/items.js"></script>
+
+        <script id="shader-fs-texture" type="x-shader/x-fragment">
+            precision mediump float;
+
+            varying vec2 vTextureCoord;
+
+            uniform sampler2D uSampler;
+
+            void main(void) {
+                gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+            }
+        </script>
+
+        <script id="shader-vs-texture" type="x-shader/x-vertex">
+            attribute vec3 aVertexPosition;
+            attribute vec2 aTextureCoord;
+
+            uniform mat4 uMVMatrix;
+            uniform mat4 uPMatrix;
+
+            varying vec2 vTextureCoord;
+
+
+            void main(void) {
+                gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+                vTextureCoord = aTextureCoord;
+            }
+        </script>
+
     </head>
     <body>
         <canvas id="webgl_box" style="
@@ -24,50 +53,75 @@ and open the template in the editor.
 
                 var w = new WebGL();
                 w.init('webgl_box');
-                w.Shader.Add("resources/shaders/fragment/shader-fs-texture.sx", "fragment");
-                w.Shader.Add("resources/shaders/vertex/shader-vs-texture.sx", "vertex");
+                w.Shader.Add("#shader-fs-texture", "fragment");
+                w.Shader.Add("#shader-vs-texture", "vertex");
 
 
                 var i = w.Items.Add(new GLItem(w.gl));
                 var gItem = w.Items.Get(i);
-                gItem.Shaders.Set("resources/shaders/fragment/shader-fs-texture.sx", "fragment");
-                gItem.Shaders.Set("resources/shaders/vertex/shader-vs-texture.sx", "vertex");
+                gItem.Shaders.Set("#shader-fs-texture", "fragment");
+                gItem.Shaders.Set("#shader-vs-texture", "vertex");
 
-
-                gItem.Vertices.Set([  -1.0, -1.0,  1.0,
-                                                1.0, -1.0,  1.0,
-                                                1.0,  1.0,  1.0,
-                                                -1.0,  1.0,  1.0
-                                            ],
-                                             w.gl.TRIANGLES);
-
-
-
-                gItem.Position.Set([0.0, 0.0, -5.0]);
-
-                gItem.Texture.Set(
+                gItem.Vertices.Set(
                         [
-                            // Front face
-                            0.0, 0.0,
+                            -1.0, -1.0,  1.0,
+                            1.0, -1.0,  1.0,
+                            1.0,  1.0,  1.0,
+                            -1.0,  1.0,  1.0
+                        ],
+                        w.gl.TRIANGLES);
+
+
+
+                gItem.Position.Set([0.0, 0.0, -10.0]);
+                gItem.Texture.Set(
+                        [   0.0, 0.0,
                             1.0, 0.0,
                             1.0, 1.0,
-                            0.0, 1.0],
-                        [
-                            0, 1, 2,      0, 2, 3    // Front face
-                        ]);
-                w.Shader.Init();
+                            0.0, 1.0]);
                 gItem.Texture.Load("resources/img/yoda.jpg", function () {
                     tick();
                 });
 
 
-                var a = 2.0;
+
+
+
+
+
+                /*var chI = w.Items.Add(new GLItem(w.gl));
+                var ch = w.Items.Get(chI);
+                ch.Shaders.Set("#shader-fs-texture", "fragment");
+                ch.Shaders.Set("#shader-vs-texture", "vertex");
+                ch.Vertices.Set(
+                        [
+                            -2.0, -2.0,  1.0,
+                            2.0, -2.0,  1.0,
+                            2.0,  2.0,  1.0,
+                            -2.0,  2.0,  1.0
+                        ],
+                        w.gl.TRIANGLES);
+                ch.Position.Set([0.0, 0.0, -10.0]);
+                ch.Position.Translate([0.0, 0.0, -10.0]);
+                ch.Texture.Set(
+                        [   0.0, 0.0,
+                            1.0, 0.0,
+                            1.0, 1.0,
+                            0.0, 1.0]);
+                ch.Texture.Load("resources/img/yoda.jpg", function () {
+                    //tick();
+                });*/
+
+
+                w.Shader.Init();
+                var a = 1;
                 function tick() {
                     requestAnimFrame(tick);
-                    a += 0.05;
-                    gItem.Rotate.Set(a, [1, 1, 1]);
+                    a += 2;
+                    gItem.Rotate.Set(a, [0, 1, 1]);
                     w.Draw.Exec();
                 }
+
 
                 requestAnimFrame = (function() {
                     return window.requestAnimationFrame ||

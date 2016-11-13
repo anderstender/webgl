@@ -35,8 +35,11 @@
         if(parent.gl){
             parent.gl.viewportWidth = canvas.width;
             parent.gl.viewportHeight = canvas.height;
+            console.log('Correct initialise WebGL.');
+            console.log('---------------');
         }else{
             console.log('Could not initialise WebGL.');
+            console.log('---------------');
             return null;
         }
         
@@ -47,24 +50,45 @@
     this.Shader = new (function(){
         var Shader = this;
 
+        /*
+         * path - либо селектор узла с шейдером, либо путь к файлу
+         * сначала чекается как селектор,
+         * если элемент не найден по селектору, то синхронным запросом пытается скачать файл
+         * */
         this.loadCode = function(path){
-            //console.log(path);
             if(typeof path == 'undefined'){
                 return null;
             }
             var strCode = null;
-            $.ajax({
-                async : false,
-                url   : path,
-                success : function (data){
-                    if(data){
-                        strCode = data;
+            var shElement = document.querySelector(path);
+            if(shElement){
+                strCode = "";
+                var k = shElement.firstChild;
+                while (k) {
+                    if (k.nodeType == 3) {
+                        strCode += k.textContent;
                     }
+                    k = k.nextSibling;
                 }
-            });
+            }else {
+                $.ajax({
+                    async: false,
+                    url: path,
+                    success: function (data) {
+                        if (data) {
+                            strCode = data;
+                        }
+                    }
+                });
+            }
             return strCode;
         };
-        
+
+        /*
+        * path - либо селектор узла с шейдером, либо путь к файлу
+        * сначала чекается как селектор,
+        * если элемент не найден по селектору, то синхронным запросом пытается скачать файл
+        * */
         this.Get = function(path, type){
             var str = parent.Shader.loadCode(path);
             if(str === null){
@@ -85,15 +109,21 @@
             if(!parent.gl.getShaderParameter(shader, parent.gl.COMPILE_STATUS)){
                 console.log(parent.gl.getShaderInfoLog(shader));
                 return null;
+            }else{
+                console.log("Shader: ");
+                console.log('   type: "' + type + '"');
+                console.log('   path: "' + path + '"');
+                console.log("correct compile");
+                console.log('---------------');
             }
             return shader;
         };
         
         this.Add = function(path, type){
-            if(parent.Shader.list[type] === null){
-                parent.Shader.list[type] = {};
+            if(Shader.list[type] === null){
+                Shader.list[type] = {};
             }
-            parent.Shader.list[type][path] = false;
+            Shader.list[type][path] = false;
         };
 
         this.list = {
@@ -142,7 +172,7 @@
         
         this.Init = function(){
 
-            parent.Shader.Load();
+            Shader.Load();
             for(var i in parent.Items.list) {
                 var item = parent.Items.list[i];
                 item.Shaders.Exec();
@@ -167,16 +197,21 @@
             delete Items.list[index];
         };
         this.rDraw = function(Item){
+
+
             mat4.perspective(parent.sceneParams.angle, parent.gl.viewportWidth / parent.gl.viewportHeight,
                             parent.sceneParams.front, parent.sceneParams.back, Item.pMatrix);
             mat4.identity(Item.mvMatrix);
-            
-            
-            
+
+
+            Item.Matrix.Push();
             mat4.translate(Item.mvMatrix, Item.Position.coords);
-            mat4.rotate(Item.Rotate.matrix, Item.Rotate.angle, Item.Rotate.coords);
-            mat4.multiply(Item.mvMatrix, Item.Rotate.matrix);
-            
+
+            for(var i = 0; i <  Item.Rotate.rotates.length; i++) {
+                mat4.rotate(Item.Rotate.matrix, Item.Rotate.rotates[i].angle, Item.Rotate.rotates[i].coords);
+                mat4.multiply(Item.mvMatrix, Item.Rotate.matrix);
+            }
+
             if(Item.Shaders.params.aVertexPosition) {
                 //ставим координаты вершин
                 parent.gl.bindBuffer(parent.gl.ARRAY_BUFFER,
@@ -208,7 +243,11 @@
 
             }
 
-            if(Item.Shaders.params.aTextureCoord) {
+            if(Item.Shaders.params.aTextureCoord
+                && Item.Shaders.params.uSampler
+                && Item.Texture.isLoad
+                && Item.Texture.isInit) {
+
                 parent.gl.bindBuffer(
                     parent.gl.ARRAY_BUFFER,
                     Item.Texture.buffer);//buffer
@@ -217,6 +256,7 @@
                     parent.gl.ARRAY_BUFFER,
                     new Float32Array(Item.Texture.coords),
                     parent.gl.STATIC_DRAW);
+
                 parent.gl.vertexAttribPointer(
                     Item.Shaders.program.textureCoordAttribute,
                     Item.Texture.buffer.itemSize,
@@ -253,18 +293,13 @@
                     0,
                     Item.Vertices.buffer.numItems);
             }
-            
-            mat4.rotate(Item.Rotate.matrix, 
-                        -Item.Rotate.angle, 
-                        [Item.Rotate.coords[0], Item.Rotate.coords[1], Item.Rotate.coords[2]]);
-            mat4.multiply(Item.mvMatrix, Item.Rotate.matrix);
-            
-            mat4.translate(Item.mvMatrix, [   -Item.Position.coords[0], 
-                                                -Item.Position.coords[1], 
-                                                -Item.Position.coords[2]]);
-             for(var i in Item.Childs.list){
-                 parent.Items.rDraw(Item.Childs.Get(i));
-             }
+
+
+            for(var i in Item.Childs.list){
+                parent.Items.rDraw(Item.Childs.Get(i));
+            }
+
+            Item.Matrix.Pop();
         };
         
         this.Draw = function(index){
