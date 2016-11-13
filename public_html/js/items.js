@@ -9,7 +9,7 @@ var GLItem = function(gl){
     this.gl = gl;
     this.mvMatrix = mat4.create();
     this.pMatrix = mat4.create();
-    
+    this.nMatrix = mat4.create();
     this.Set = function(params){
         if(typeof params.Vertices !== 'undefined'){
             Parent.Vertices.Set(params.Vertices[0], params.Vertices[1]);
@@ -43,7 +43,13 @@ var GLItem = function(gl){
             Vertices.buffer.numItems = Vertices.numItems;
             Vertices.buffer.itemSize = Vertices.itemSize;
             
-            
+            if(Parent.Colors.coords.length === 0){
+                var colors = [];
+                for(var i=0;i<Vertices.buffer.numItems; i++){
+                    colors = colors.concat([1.0, 1.0, 1.0, 1.0]);
+                }
+                Parent.Colors.Set(colors);
+            }
             
             Vertices.glType = glType;
         };

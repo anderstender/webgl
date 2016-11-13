@@ -126,10 +126,11 @@
             parent.shaderProgram.vertexColorAttribute = parent.gl.getAttribLocation(parent.shaderProgram, "aVertexColor");
             parent.gl.enableVertexAttribArray(parent.shaderProgram.vertexColorAttribute);
 
+
+            
             parent.shaderProgram.pMatrixUniform = parent.gl.getUniformLocation(parent.shaderProgram, "uPMatrix");
             parent.shaderProgram.mvMatrixUniform = parent.gl.getUniformLocation(parent.shaderProgram, "uMVMatrix");
-            
-            
+
         };
     });
 

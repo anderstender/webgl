@@ -26,50 +26,22 @@ and open the template in the editor.
                 w.init('webgl_box');
                 var i = w.Items.Add(new GLItem(w.gl));
 
-                w.Items.Get(i).Vertices.Set([0.0,  1.0,  0.0,
-                                            -1.0, -1.0,  0.0,
-                                             1.0, -1.0,  0.0],
-                                             w.gl.TRIANGLE_STRIP);
-                w.Items.Get(i).Colors.Set([ 1.0, 0.0, 0.0, 1.0,
-                                            0.0, 1.0, 0.0, 1.0,
-                                            0.0, 0.0, 1.0, 1.0]);
-                w.Items.Get(i).Position.Set([-10.0, 0.0, -50.0]);
+                w.Items.Get(i).Vertices.Set([   -1.0, -1.0, -1.0,
+                                                -1.0, 1.0,  -1.0,
+                                                 1.0, 1.0,  -1.0,
+                                                 1.0, -1.0, -1.0,
+                                            ],
+                                             w.gl.TRIANGLE_FAN);
+
+
+
+                w.Items.Get(i).Position.Set([0.0, 0.0, -10.0]);
                  
-                w.Items.Get(i).Position.Translate([0.0,0.0, 0.0]);
-                var chI = w.Items.Get(i).Childs.Add(new GLItem(w.gl));
-                
-                var child = w.Items.Get(i).Childs.Get(chI);
-                
-                child.Vertices.Set( [0.0,  2.0,  0.0,
-                                    -2.0, -2.0,  0.0,
-                                     2.0, -2.0,  0.0],
-                                     w.gl.TRIANGLE_STRIP);
-                
-                child.Colors.Set( [ 1.0, 0.0, 0.0, 1.0,
-                                    0.0, 1.0, 0.0, 1.0,
-                                    0.0, 0.0, 1.0, 1.0]);
-                                
-                child.Position.Translate([0.0,0.0, -4.0]);
-                
-                var chI = child.Childs.Add(new GLItem(w.gl));
-                var ch = child.Childs.Get(chI);
-                ch.Vertices.Set( [0.0,  2.0,  0.0,
-                    -2.0, -2.0,  0.0,
-                     2.0, -2.0,  0.0],
-                     w.gl.TRIANGLE_STRIP);
-                
-                ch.Colors.Set( [ 1.0, 0.0, 0.0, 1.0,
-                                    0.0, 1.0, 0.0, 1.0,
-                                    0.0, 0.0, 1.0, 1.0]);
-                                
-                ch.Position.Translate([0.0,4.0, 2.0]);
-                
-                var a = 0.0;
+                var a = 2.0;
                 setInterval(function(){
                     a += 0.1;
-                    w.Items.Get(i).Rotate.Set(a, [1, 0, 0]);
-                    child.Rotate.Set(a , [1, 0, 0]);
-                    ch.Rotate.Set(a , [1, 0, 0]);
+                    w.Items.Get(i).Rotate.Set(a, [1, 1, 1]);
+
                     w.Draw.Exec();
                 }, 20);
         </script>
