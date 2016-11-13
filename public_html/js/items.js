@@ -27,7 +27,145 @@ var GLItem = function(gl){
             Parent.Rotate.Set(params.Rotate[0], params.Rotate[1]);
         }
     };
-    
+
+    this.Shaders = new (function () {
+        var Shaders = this;
+        this.program = Parent.gl.createProgram();
+
+        this.list = null;
+        this.Set = function(path, type){
+            if(Shaders.list === null){
+                Shaders.list = {};
+            }
+            Shaders.list[path] = type;
+        };
+
+        this.params = {
+            'aVertexPosition' : true,
+            'aVertexColor'    : false,
+            'aTextureCoord'   : true
+        };
+
+        this.matrixParams = {
+            'uPMatrix'  : true,
+            'uMVMatrix' : true,
+            'uSampler'  : true
+        };
+
+        this.Attach = function(shader){
+            Parent.gl.attachShader(Shaders.program, shader);
+        };
+        this.Exec = function(){
+            Parent.gl.linkProgram(Shaders.program);
+            if(!Parent.gl.getProgramParameter(
+                    Shaders.program,
+                    Parent.gl.LINK_STATUS)){
+                console.log("Could not initialise shaders for item:");
+                console.log(Parent);
+                console.log('------------');
+            }
+
+            Parent.gl.useProgram(Shaders.program);
+
+            if(Shaders.params.aVertexPosition) {
+                Shaders.program.vertexPositionAttribute = Parent.gl.getAttribLocation(Shaders.program, "aVertexPosition");
+                Parent.gl.enableVertexAttribArray(Shaders.program.vertexPositionAttribute);
+            }
+            if(Shaders.params.aVertexColor) {
+                Shaders.program.vertexColorAttribute = Parent.gl.getAttribLocation(Shaders.program, "aVertexColor");
+                Parent.gl.enableVertexAttribArray(Shaders.program.vertexColorAttribute);
+            }
+            if(Shaders.params.aTextureCoord) {
+                Shaders.program.textureCoordAttribute = Parent.gl.getAttribLocation(Shaders.program, "aTextureCoord");
+                Parent.gl.enableVertexAttribArray(Shaders.program.textureCoordAttribute);
+            }
+
+
+
+
+            if(Shaders.matrixParams.uPMatrix) {
+                Shaders.program.pMatrixUniform = Parent.gl.getUniformLocation(Shaders.program, "uPMatrix");
+            }
+
+            if(Shaders.matrixParams.uMVMatrix) {
+                Shaders.program.mvMatrixUniform = Parent.gl.getUniformLocation(Shaders.program, "uMVMatrix");
+            }
+
+            if(Shaders.matrixParams.uSampler) {
+                Shaders.program.samplerUniforms = Parent.gl.getUniformLocation(Shaders.program, "uSampler");
+            }
+
+        };
+    });
+
+
+    this.Texture = new (function () {
+        var Texture = this;
+        this.texture = null;
+
+        this.coords = [];
+        this.indexes = [];
+
+        this.indexBuffer = Parent.gl.createBuffer();
+
+        this.numItems = 0;
+        this.itemSize = 2;
+        this.buffer = Parent.gl.createBuffer();
+
+        this.Load = function (path, callback) {
+            Texture.texture = Parent.gl.createTexture();
+            Texture.texture.image = new Image();
+            Texture.texture.image.onload = function () {
+                Texture.loadHandler();
+                if(typeof callback === 'function') {
+                    callback();
+                }
+            }
+
+            Texture.texture.image.src = path;
+        };
+
+        this.loadHandler = function(){
+            Parent.gl.bindTexture(Parent.gl.TEXTURE_2D, Texture.texture);
+
+            Parent.gl.pixelStorei(Parent.gl.UNPACK_FLIP_Y_WEBGL, true);
+
+            Parent.gl.texImage2D(
+                Parent.gl.TEXTURE_2D,
+                0,
+                Parent.gl.RGBA,
+                Parent.gl.RGBA,
+                Parent.gl.UNSIGNED_BYTE,
+                Texture.texture.image);
+
+            Parent.gl.texParameteri(
+                Parent.gl.TEXTURE_2D,
+                Parent.gl.TEXTURE_MAG_FILTER,
+                Parent.gl.NEAREST);
+
+            Parent.gl.texParameteri(
+                Parent.gl.TEXTURE_2D,
+                Parent.gl.TEXTURE_MIN_FILTER,
+                Parent.gl.NEAREST);
+
+            Parent.gl.bindTexture(Parent.gl.TEXTURE_2D, null);
+        };
+
+        this.Set = function(coords, indexes){
+            Texture.coords = coords;
+            Texture.numItems = parseInt(Texture.coords.length / Texture.itemSize);
+
+            Texture.buffer.numItems = Texture.numItems;
+            Texture.buffer.itemSize = Texture.itemSize;
+
+            Texture.indexes = indexes;
+            var num = Texture.indexes.length;
+            Texture.indexBuffer.numItems = num;
+            Texture.indexBuffer.itemSize = 1;
+
+        };
+    });
+
     this.Vertices = new (function(){
         var Vertices = this;
         this.coords = [];

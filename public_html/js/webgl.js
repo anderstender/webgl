@@ -40,13 +40,15 @@
             return null;
         }
         
-        parent.Shader.Init();
+
     };
     this.shaderProgram = null;
     this.shadersList = null;
     this.Shader = new (function(){
         var Shader = this;
+
         this.loadCode = function(path){
+            //console.log(path);
             if(typeof path == 'undefined'){
                 return null;
             }
@@ -87,50 +89,64 @@
             return shader;
         };
         
-        this.Set = function(path, type){
-            if(parent.shadersList === null){
-                parent.shadersList = {};
+        this.Add = function(path, type){
+            if(parent.Shader.list[type] === null){
+                parent.Shader.list[type] = {};
             }
-            if(type === false){
-                delete parent.shadersList[path];
-            }else{
-                parent.shadersList[path] = type;
+            parent.Shader.list[type][path] = false;
+        };
+
+        this.list = {
+            'fragment' : null,
+            'vertex'   : null
+        };
+        /*
+         метод загружает шейдеры и устанавливает их на каждый элемент в зависимости от его настроек
+         */
+        this.Load = function(){
+            if(parent.Shader.list.fragment === null) {//если шейдеры не заданы, то задаем стандартные
+                parent.Shader.list.fragment = {
+                    "resources/shaders/fragment/shader-fs.sx" : false
+                }
             }
+            if(parent.Shader.list.vertex === null) {//если шейдеры не заданы, то задаем стандартные
+                parent.Shader.list.vertex = {
+                    "resources/shaders/vertex/shader-vs.sx" : false
+                }
+            }
+
+            for(var type in parent.Shader.list){
+                var list = parent.Shader.list[type];
+                for(var path in list){
+                    var shader = list[path];
+                    if(shader === false){
+                        parent.Shader.list[type][path] = parent.Shader.Get(path, type);
+                    }
+                }
+            }
+
+            for(var i in parent.Items.list){
+                var item = parent.Items.list[i];
+                if(item.Shaders.list === null){
+                    item.Shaders.Set("resources/shaders/fragment/shader-fs.sx", "fragment");
+                    item.Shaders.Set("resources/shaders/vertex/shader-vs.sx", "vertex");
+                }
+
+                for(var path in item.Shaders.list){
+                    var type = item.Shaders.list[path];
+                    item.Shaders.Attach(parent.Shader.list[type][path]);
+                }
+            }
+
         };
         
-        
         this.Init = function(){
-            if(parent.shadersList === null){//если шейдеры не заданы, то задаем стандартные
-                parent.shadersList = {
-                    "resources/shaders/fragment/shader-fs.sx"   : "fragment",
-                    "resources/shaders/vertex/shader-vs.sx"     : "vertex"
-                };
+
+            parent.Shader.Load();
+            for(var i in parent.Items.list) {
+                var item = parent.Items.list[i];
+                item.Shaders.Exec();
             }
-            parent.shaderProgram = parent.gl.createProgram();
-            for(var path in parent.shadersList){
-                var type = parent.shadersList[path];
-                var shader = parent.Shader.Get(path, type);
-                parent.gl.attachShader(parent.shaderProgram, shader);
-            }
-            parent.gl.linkProgram(parent.shaderProgram);
-
-            if(!parent.gl.getProgramParameter(parent.shaderProgram, 
-                                                parent.gl.LINK_STATUS)){
-                console.log("Could not initialise shaders");
-            }
-            parent.gl.useProgram(parent.shaderProgram);
-
-            parent.shaderProgram.vertexPositionAttribute = parent.gl.getAttribLocation(parent.shaderProgram, "aVertexPosition");
-            parent.gl.enableVertexAttribArray(parent.shaderProgram.vertexPositionAttribute);
-
-            parent.shaderProgram.vertexColorAttribute = parent.gl.getAttribLocation(parent.shaderProgram, "aVertexColor");
-            parent.gl.enableVertexAttribArray(parent.shaderProgram.vertexColorAttribute);
-
-
-            
-            parent.shaderProgram.pMatrixUniform = parent.gl.getUniformLocation(parent.shaderProgram, "uPMatrix");
-            parent.shaderProgram.mvMatrixUniform = parent.gl.getUniformLocation(parent.shaderProgram, "uMVMatrix");
-
         };
     });
 
@@ -150,7 +166,7 @@
         this.Remove = function(index){
             delete Items.list[index];
         };
-        this.rDraw = function(Item, Parent){
+        this.rDraw = function(Item){
             mat4.perspective(parent.sceneParams.angle, parent.gl.viewportWidth / parent.gl.viewportHeight,
                             parent.sceneParams.front, parent.sceneParams.back, Item.pMatrix);
             mat4.identity(Item.mvMatrix);
@@ -161,40 +177,82 @@
             mat4.rotate(Item.Rotate.matrix, Item.Rotate.angle, Item.Rotate.coords);
             mat4.multiply(Item.mvMatrix, Item.Rotate.matrix);
             
-            
-            //ставим координаты вершин
-            parent.gl.bindBuffer(parent.gl.ARRAY_BUFFER, 
-                                    Item.Vertices.buffer);
-                                    
-            parent.gl.bufferData(parent.gl.ARRAY_BUFFER, 
-                                    new Float32Array(Item.Vertices.coords), 
-                                    parent.gl.STATIC_DRAW);
+            if(Item.Shaders.params.aVertexPosition) {
+                //ставим координаты вершин
+                parent.gl.bindBuffer(parent.gl.ARRAY_BUFFER,
+                    Item.Vertices.buffer);
 
-            parent.gl.vertexAttribPointer(parent.shaderProgram.vertexPositionAttribute, 
-                                            Item.Vertices.buffer.itemSize, 
-                                            parent.gl.FLOAT, false, 0, 0);
-                                    
-            //натягиваем цвет                             
-            parent.gl.bindBuffer(parent.gl.ARRAY_BUFFER, 
-                                Item.Colors.buffer);  
+                parent.gl.bufferData(parent.gl.ARRAY_BUFFER,
+                    new Float32Array(Item.Vertices.coords),
+                    parent.gl.STATIC_DRAW);
 
-            parent.gl.bufferData(parent.gl.ARRAY_BUFFER, 
-                                new Float32Array(Item.Colors.coords), 
-                                parent.gl.STATIC_DRAW);
+                parent.gl.vertexAttribPointer(Item.Shaders.program.vertexPositionAttribute,
+                    Item.Vertices.buffer.itemSize,
+                    parent.gl.FLOAT, false, 0, 0);
+
+            }
+            if(Item.Shaders.params.aVertexColor) {
+                //натягиваем цвет
+                parent.gl.bindBuffer(parent.gl.ARRAY_BUFFER,
+                    Item.Colors.buffer);
+
+                parent.gl.bufferData(parent.gl.ARRAY_BUFFER,
+                    new Float32Array(Item.Colors.coords),
+                    parent.gl.STATIC_DRAW);
 
 
+                parent.gl.vertexAttribPointer(Item.Shaders.program.vertexColorAttribute,
+                    Item.Colors.buffer.itemSize,
+                    parent.gl.FLOAT,
+                    false, 0, 0);
 
-            parent.gl.vertexAttribPointer(  parent.shaderProgram.vertexColorAttribute, 
-                                            Item.Colors.buffer.itemSize, 
-                                            parent.gl.FLOAT, 
-                                            false, 0, 0);
-                                      
-            
-            parent.Items.setMatUniform(Item);                                
-            parent.gl.drawArrays(Item.Vertices.glType, 
-                                    0, 
-                                    Item.Vertices.buffer.numItems);
-            
+            }
+
+            if(Item.Shaders.params.aTextureCoord) {
+                parent.gl.bindBuffer(
+                    parent.gl.ARRAY_BUFFER,
+                    Item.Texture.buffer);//buffer
+
+                parent.gl.bufferData(
+                    parent.gl.ARRAY_BUFFER,
+                    new Float32Array(Item.Texture.coords),
+                    parent.gl.STATIC_DRAW);
+                parent.gl.vertexAttribPointer(
+                    Item.Shaders.program.textureCoordAttribute,
+                    Item.Texture.buffer.itemSize,
+                    parent.gl.FLOAT, false, 0, 0);
+
+                parent.gl.bindBuffer(
+                    parent.gl.ELEMENT_ARRAY_BUFFER,
+                    Item.Texture.indexBuffer);//indexBuffer
+
+                parent.gl.bufferData(
+                    parent.gl.ELEMENT_ARRAY_BUFFER,
+                    new Uint16Array(Item.Texture.indexes),
+                    parent.gl.STATIC_DRAW);
+
+                parent.gl.activeTexture(parent.gl.TEXTURE0);
+
+                parent.gl.bindTexture(
+                    parent.gl.TEXTURE_2D,
+                    Item.Texture.texture);
+                parent.gl.uniform1i(
+                    Item.Shaders.program.samplerUniform,
+                    0);
+            }
+            parent.Items.setMatUniform(Item);
+            if(Item.Shaders.params.aTextureCoord) {
+                parent.gl.drawElements(
+                    parent.gl.TRIANGLES,
+                    Item.Texture.indexBuffer.numItems,
+                    parent.gl.UNSIGNED_SHORT,
+                    0);
+            }else {
+                parent.gl.drawArrays(
+                    Item.Vertices.glType,
+                    0,
+                    Item.Vertices.buffer.numItems);
+            }
             
             mat4.rotate(Item.Rotate.matrix, 
                         -Item.Rotate.angle, 
@@ -216,8 +274,8 @@
         
         this.setMatUniform = function(Item){
             //var Item = parent.Items.Get(index);
-            parent.gl.uniformMatrix4fv(parent.shaderProgram.pMatrixUniform, false, Item.pMatrix);
-            parent.gl.uniformMatrix4fv(parent.shaderProgram.mvMatrixUniform, false, Item.mvMatrix);
+            parent.gl.uniformMatrix4fv(Item.Shaders.program.pMatrixUniform, false, Item.pMatrix);
+            parent.gl.uniformMatrix4fv(Item.Shaders.program.mvMatrixUniform, false, Item.mvMatrix);
         };
     });
     
@@ -252,6 +310,9 @@
             parent.m4.Start();
         };
         this.Exec = function(){
+
+
+
             parent.Draw.Start();
             //parent.m4.Translate([0.0,0.0, -5]);
             
