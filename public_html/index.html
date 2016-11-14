@@ -73,13 +73,13 @@ and open the template in the editor.
 
 
 
-                gItem.Position.Set([0.0, 0.0, -10.0]);
+                gItem.Position.Set([0.0, 0.0, -8.0]);
                 gItem.Texture.Set(
                         [   0.0, 0.0,
                             1.0, 0.0,
                             1.0, 1.0,
                             0.0, 1.0]);
-                gItem.Texture.Load("resources/img/yoda.jpg", function () {
+                gItem.Texture.Load("resources/img/blizzard.jpg", function () {
                     tick();
                 });
 
@@ -89,38 +89,130 @@ and open the template in the editor.
 
 
 
-                var chI = w.Items.Add(new GLItem(w.gl));
-                var ch = w.Items.Get(chI);
-                ch.Shaders.Set("#shader-fs-texture", "fragment");
-                ch.Shaders.Set("#shader-vs-texture", "vertex");
-                ch.Vertices.Set(
+                i = w.Items.Add(new GLItem(w.gl));
+                var gItem2 = w.Items.Get(i);
+                gItem2.Shaders.Set("#shader-fs-texture", "fragment");
+                gItem2.Shaders.Set("#shader-vs-texture", "vertex");
+                gItem2.Vertices.Set(
                         [
-                            -2.0, -2.0,  1.0,
-                            2.0, -2.0,  1.0,
-                            2.0,  2.0,  1.0,
-                            -2.0,  2.0,  1.0
+                            -1.0, -1.0,  -1.0,
+                            1.0, -1.0,  -1.0,
+                            1.0,  1.0,  -1.0,
+                            -1.0,  1.0,  -1.0
                         ],
                         w.gl.TRIANGLES);
-                ch.Position.Set([0.0, 0.0, -30.0]);
-                ch.Position.Translate([0.0, 0.0, -10.0]);
-                ch.Texture.Set(
+                gItem2.Position.Set([0.0, 0.0, -8.0]);
+                gItem2.Position.Translate([0.0, 0.0, 0.0]);
+                gItem2.Texture.Set(
                         [   0.0, 0.0,
                             1.0, 0.0,
                             1.0, 1.0,
                             0.0, 1.0]);
-                ch.Texture.Load("resources/img/yoda.jpg", function () {
-                    //tick();
-                });
+                gItem2.Texture.Load("resources/img/blizzard.jpg");
+
+
+                i = w.Items.Add(new GLItem(w.gl));
+                var gItem3 = w.Items.Get(i);
+                gItem3.Shaders.Set("#shader-fs-texture", "fragment");
+                gItem3.Shaders.Set("#shader-vs-texture", "vertex");
+                gItem3.Vertices.Set(
+                        [
+                            -1.0, -1.0,  -1.0,
+                            -1.0, 1.0,  -1.0,
+                            -1.0,  1.0,  1.0,
+                            -1.0,  -1.0,  1.0
+                        ],
+                        w.gl.TRIANGLES);
+                gItem3.Position.Set([0.0, 0.0, -8.0]);
+                gItem3.Position.Translate([0.0, 0.0, 0.0]);
+                gItem3.Texture.Set(
+                        [   0.0, 0.0,
+                            1.0, 0.0,
+                            1.0, 1.0,
+                            0.0, 1.0]);
+                gItem3.Texture.Load("resources/img/blizzard.jpg");
+
+
+                i = w.Items.Add(new GLItem(w.gl));
+                var gItem4 = w.Items.Get(i);
+                gItem4.Shaders.Set("#shader-fs-texture", "fragment");
+                gItem4.Shaders.Set("#shader-vs-texture", "vertex");
+                gItem4.Vertices.Set(
+                        [
+                            1.0, -1.0,  -1.0,
+                            1.0, 1.0,  -1.0,
+                            1.0,  1.0,  1.0,
+                            1.0,  -1.0,  1.0
+                        ],
+                        w.gl.TRIANGLES);
+                gItem4.Position.Set([0.0, 0.0, -8.0]);
+                gItem4.Position.Translate([0.0, 0.0, 0.0]);
+                gItem4.Texture.Set(
+                        [   0.0, 0.0,
+                            1.0, 0.0,
+                            1.0, 1.0,
+                            0.0, 1.0]);
+                gItem4.Texture.Load("resources/img/blizzard.jpg");
+
+
+                i = w.Items.Add(new GLItem(w.gl));
+                var gItem5 = w.Items.Get(i);
+                gItem5.Shaders.Set("#shader-fs-texture", "fragment");
+                gItem5.Shaders.Set("#shader-vs-texture", "vertex");
+                gItem5.Vertices.Set(
+                        [
+                            -1.0, 1.0,  -1.0,
+                            -1.0, 1.0,  1.0,
+                            1.0,  1.0,  1.0,
+                            1.0,  1.0,  -1.0
+                        ],
+                        w.gl.TRIANGLES);
+                gItem5.Position.Set([0.0, 0.0, -8.0]);
+                gItem5.Position.Translate([0.0, 0.0, 0.0]);
+                gItem5.Texture.Set(
+                        [   0.0, 0.0,
+                            1.0, 0.0,
+                            1.0, 1.0,
+                            0.0, 1.0]);
+                gItem5.Texture.Load("resources/img/blizzard.jpg");
+
+
+                i = w.Items.Add(new GLItem(w.gl));
+                var gItem6 = w.Items.Get(i);
+                gItem6.Shaders.Set("#shader-fs-texture", "fragment");
+                gItem6.Shaders.Set("#shader-vs-texture", "vertex");
+                gItem6.Vertices.Set(
+                        [
+                            -1.0, -1.0,  -1.0,
+                            -1.0, -1.0,  1.0,
+                            1.0,  -1.0,  1.0,
+                            1.0,  -1.0,  -1.0
+                        ],
+                        w.gl.TRIANGLES);
+                gItem6.Position.Set([0.0, 0.0, -8.0]);
+                gItem6.Position.Translate([0.0, 0.0, 0.0]);
+                gItem6.Texture.Set(
+                        [   0.0, 0.0,
+                            1.0, 0.0,
+                            1.0, 1.0,
+                            0.0, 1.0]);
+                gItem6.Texture.Load("resources/img/blizzard.jpg");
 
 
                 w.Shader.Init();
+
+
+
                 var a = 1;
                 function tick() {
                     requestAnimFrame(tick);
-                    a += 2;
+                    a += 1;
                     gItem.Rotate.Set(a, [0, 1, 1]);
-                    ch.Rotate.Set(-a, [0, 1, 1]);
-                
+                    gItem2.Rotate.Set(a, [0, 1, 1]);
+                    gItem3.Rotate.Set(a, [0, 1, 1]);
+                    gItem4.Rotate.Set(a, [0, 1, 1]);
+                    gItem5.Rotate.Set(a, [0, 1, 1]);
+                    gItem6.Rotate.Set(a, [0, 1, 1]);
                     w.Draw.Exec();
                 }
 
