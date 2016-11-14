@@ -89,7 +89,7 @@ and open the template in the editor.
 
 
 
-                /*var chI = w.Items.Add(new GLItem(w.gl));
+                var chI = w.Items.Add(new GLItem(w.gl));
                 var ch = w.Items.Get(chI);
                 ch.Shaders.Set("#shader-fs-texture", "fragment");
                 ch.Shaders.Set("#shader-vs-texture", "vertex");
@@ -101,7 +101,7 @@ and open the template in the editor.
                             -2.0,  2.0,  1.0
                         ],
                         w.gl.TRIANGLES);
-                ch.Position.Set([0.0, 0.0, -10.0]);
+                ch.Position.Set([0.0, 0.0, -30.0]);
                 ch.Position.Translate([0.0, 0.0, -10.0]);
                 ch.Texture.Set(
                         [   0.0, 0.0,
@@ -110,7 +110,7 @@ and open the template in the editor.
                             0.0, 1.0]);
                 ch.Texture.Load("resources/img/yoda.jpg", function () {
                     //tick();
-                });*/
+                });
 
 
                 w.Shader.Init();
@@ -119,6 +119,8 @@ and open the template in the editor.
                     requestAnimFrame(tick);
                     a += 2;
                     gItem.Rotate.Set(a, [0, 1, 1]);
+                    ch.Rotate.Set(-a, [0, 1, 1]);
+                
                     w.Draw.Exec();
                 }
 

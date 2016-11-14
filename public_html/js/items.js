@@ -76,7 +76,8 @@ var GLItem = function(gl){
         };
 
 
-        this.Attach = function(shader){
+        this.Attach = function(shader, program){
+            Shaders.program = program;
             Parent.gl.attachShader(Shaders.program, shader);
         };
         this.Exec = function(){

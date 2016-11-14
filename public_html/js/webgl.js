@@ -154,7 +154,7 @@
                     }
                 }
             }
-
+            var program = parent.gl.createProgram();
             for(var i in parent.Items.list){
                 var item = parent.Items.list[i];
                 if(item.Shaders.list === null){
@@ -164,7 +164,7 @@
 
                 for(var path in item.Shaders.list){
                     var type = item.Shaders.list[path];
-                    item.Shaders.Attach(parent.Shader.list[type][path]);
+                    item.Shaders.Attach(parent.Shader.list[type][path], program);
                 }
             }
 
@@ -173,6 +173,7 @@
         this.Init = function(){
 
             Shader.Load();
+            
             for(var i in parent.Items.list) {
                 var item = parent.Items.list[i];
                 item.Shaders.Exec();
