@@ -50,48 +50,40 @@ and open the template in the editor.
             " width="500" height="500"></canvas>
             
         <script type="text/javascript">
-
+                var arPos = [0.0, 0.0, -8.0];
+                var arTextCoors = [
+                    0.0, 0.0,
+                    1.0, 0.0,
+                    1.0, 1.0,
+                    0.0, 1.0
+                ];
                 var w = new WebGL();
-                w.init('webgl_box');
-                w.Shader.Add("#shader-fs-texture", "fragment");
-                w.Shader.Add("#shader-vs-texture", "vertex");
-
-                var texture = w.Textures.Add("resources/img/blizzard.jpg");
-
-                var gItem = w.Items
+                var textPath = "resources/img/blizzard.jpg";
+                var gItem = w
+                    .init('webgl_box')
+                        .Shader
+                            .Add("#shader-fs-texture", "fragment")
+                            .Add("#shader-vs-texture", "vertex").Instance()
+                        .Textures
+                            .Add(textPath)
+                            .Load(function(){
+                                w.Textures.Exec();
+                                w.Shader.Init();
+                                tick();
+                            }).Instance()
+                        .Items
                             .Add(new GLItem(w))
-                                    .Texture.Set(
-                                        [
-                                            0.0, 0.0,
-                                            1.0, 0.0,
-                                            1.0, 1.0,
-                                            0.0, 1.0
-                                        ],
-                                        texture).Instance()
-                                    .Vertices.Set(
-                                        [
-                                            -1.0, -1.0,  1.0,
-                                            1.0, -1.0,  1.0,
-                                            1.0,  1.0,  1.0,
-                                            -1.0,  1.0,  1.0
-                                        ],
-                                        w.gl.TRIANGLES).Instance()
-                                    .Position.Set([0.0, 0.0, -8.0]).Instance();
-
-                w.Textures.Load(function(){
-                    w.Textures.Exec();
-                    w.Shader.Init();
-                    tick();
-                });
-
-
-
-
-
-
-
-
-
+                                .Texture.Set(arTextCoors, w.Textures.Get(textPath)).Instance()
+                                .Vertices.Set(
+                                    [
+                                        -1.0, -1.0,  1.0,
+                                        1.0, -1.0,  1.0,
+                                        1.0,  1.0,  1.0,
+                                        -1.0,  1.0,  1.0
+                                    ],
+                                    w.gl.TRIANGLES).Instance()
+                                .Position.Set(arPos).Instance();
+                console.log(w);
                 /*i = w.Items.Add(new GLItem(w.gl));
                 var gItem2 = w.Items.Get(i);
                 gItem2.Shaders.Set("#shader-fs-texture", "fragment");

@@ -13,6 +13,7 @@
     };
     this.setSceneParam = function(key, value){
         parent.sceneParams[key] = value;
+        return parent;
     };
     
     this.init = function(id){
@@ -35,15 +36,14 @@
         if(parent.gl){
             parent.gl.viewportWidth = canvas.width;
             parent.gl.viewportHeight = canvas.height;
-            console.log('Correct initialise WebGL.');
-            console.log('---------------');
+            console.info('Correct initialise WebGL.');
+            console.info('---------------');
         }else{
-            console.log('Could not initialise WebGL.');
-            console.log('---------------');
-            return null;
+            console.error('Could not initialise WebGL.');
+            console.error('---------------');
+            th
         }
-        
-
+        return parent;
     };
     this.shaderProgram = null;
     this.shadersList = null;
@@ -107,14 +107,14 @@
             parent.gl.compileShader(shader);
 
             if(!parent.gl.getShaderParameter(shader, parent.gl.COMPILE_STATUS)){
-                console.log(parent.gl.getShaderInfoLog(shader));
+                console.error(parent.gl.getShaderInfoLog(shader));
                 return null;
             }else{
-                console.log("Shader: ");
-                console.log('   type: "' + type + '"');
-                console.log('   path: "' + path + '"');
-                console.log("correct compile");
-                console.log('---------------');
+                console.info("Shader: ");
+                console.info('   type: "' + type + '"');
+                console.info('   path: "' + path + '"');
+                console.info("correct compile");
+                console.info('---------------');
             }
             return shader;
         };
@@ -124,6 +124,7 @@
                 Shader.list[type] = {};
             }
             Shader.list[type][path] = false;
+            return Shader;
         };
 
         this.list = {
@@ -157,15 +158,17 @@
             if(!parent.gl.getProgramParameter(
                     Shader.program,
                     parent.gl.LINK_STATUS)){
-                console.log("Could not initialise shaders for item:");
-                console.log(parent);
-                console.log('------------');
+                console.error("Could not initialise shaders for item:");
+                console.error(parent);
+                console.error('------------');
             }
 
             parent.gl.useProgram(Shader.program);
             for(var k in parent.Items.list){
                 parent.Items.list[k].Shaders.Set(Shader.program);
             }
+
+            return Shader;
         };
         
         this.Init = function(){
@@ -176,7 +179,13 @@
                 var item = parent.Items.list[i];
                 item.Shaders.Exec();
             }
+
+            return Shader;
         };
+
+        this.Instance = function(){
+            return parent;
+        }
     });
 
     this.Items = new (function(){
@@ -194,6 +203,7 @@
         
         this.Remove = function(index){
             delete Items.list[index];
+            return Items;
         };
         this.rDraw = function(Item){
 
@@ -297,22 +307,32 @@
             }
 
             Item.Matrix.Pop();
+            return Items;
         };
         
         this.Draw = function(index){
             var Item = parent.Items.Get(index);
             parent.Items.rDraw(Item);
+            return Items;
         };
         
         this.setMatUniform = function(Item){
             //var Item = parent.Items.Get(index);
             parent.gl.uniformMatrix4fv(Item.Shaders.program.pMatrixUniform, false, Item.pMatrix);
             parent.gl.uniformMatrix4fv(Item.Shaders.program.mvMatrixUniform, false, Item.mvMatrix);
+            return Items;
         };
+        this.Instance = function(){
+            return parent;
+        }
     });
     
     this.Position = new(function(){
         this.coords = [0.0, 0.0, 0.0];
+
+        this.Instance = function(){
+            return parent;
+        }
     });
     this.Textures = new (function(){
         var Textures = this;
@@ -328,30 +348,47 @@
                 texture : parent.gl.createTexture()
             };
             Textures.count = Object.keys(Textures.list).length;
-            return Textures.list[path].texture;
-            //console.log(Textures.count);
+            return Textures;
         };
 
+        this.Get = function (path) {
+            return Textures.list[path].texture;
+        }
         this.Load = function(callback){
             for(var k in Textures.list){
-                console.log(k);
-                var objTex = Textures.list[k];
                 Textures.list[k].texture.image = new Image();
                 Textures.list[k].texture.image.onload = function(){
                     Textures.list[k].isLoaded = true;
                     Textures.countLoaded++;
 
-                    console.log('Texture "' + k + '" was loaded');
-                    console.log('---------------');
+                    console.info('Texture "' + k + '" was loaded');
+                    console.info('---------------');
                     if(Textures.countLoaded === Textures.count){
                         Textures.isLoaded = true;
-                        console.log('All textures was loaded');
-                        console.log('---------------');
+                        console.info('All textures was loaded');
+                        console.info('---------------');
                         callback();
                     }
                 };
+
+                Textures.list[k].texture.image.onerror = function(){
+                    Textures.list[k].isLoaded = false;
+                    Textures.countLoaded++;
+
+                    console.error('Texture "' + k + '" load error');
+                    console.error('---------------');
+                    if(Textures.countLoaded === Textures.count){
+                        Textures.isLoaded = true;
+                        console.info('All textures was loaded');
+                        console.info('---------------');
+                        callback();
+                    }
+                };
+
                 Textures.list[k].texture.image.src = k;
             }
+
+            return Textures;
         };
 
         this.Exec = function(){
@@ -360,26 +397,44 @@
                     parent.Items.list[k].Texture.Bind();
                 }
             }
+            return Textures;
+        };
+
+        this.Instance = function(){
+            return parent;
         };
     });
     this.m4 = new (function(){
+        var m4 = this;
         this.Translate = function(coords){
             mat4.translate(parent.mvMatrix, coords);
+            return m4;
         };
         this.Percpective = function(){
             mat4.perspective(parent.sceneParams.angle, parent.gl.viewportWidth / parent.gl.viewportHeight,
                             parent.sceneParams.front, parent.sceneParams.back, parent.pMatrix);
+
+            return m4;
         };
         this.Identity = function(){
             mat4.identity(parent.mvMatrix);
+
+            return m4;
         };
-        
+
         this.Start = function(){
             parent.m4.Percpective();
             parent.m4.Identity();
+
+            return m4;
         };
+
+        this.Instance = function(){
+            return parent;
+        }
     });
     this.Draw = new (function(){
+        var Draw = this;
         this.Start =  function(){
             parent.gl.clearColor(0.0, 0.0, 0.0, 1.0);
             parent.gl.enable(parent.gl.DEPTH_TEST);
@@ -389,6 +444,7 @@
                             
             parent.gl.clear(parent.gl.COLOR_BUFFER_BIT | parent.gl.DEPTH_BUFFER_BIT);
             parent.m4.Start();
+            return Draw;
         };
         this.Exec = function(){
 
@@ -396,17 +452,21 @@
 
             parent.Draw.Start();
             //parent.m4.Translate([0.0,0.0, -5]);
-            
-            
+
+
             for(var i in parent.Items.list){
                 parent.Items.Draw(i);
             }
+            return Draw;
         };
+
+        this.Instance = function(){
+            return parent;
+        }
     });
-    
-    
     this.setMatrixUniforms = function() {
         parent.gl.uniformMatrix4fv(parent.shaderProgram.pMatrixUniform, false, parent.pMatrix);
-        parent.gl.uniformMatrix4fv(parent.shaderProgram.mvMatrixUniform, false, parent.mvMatrix);
+        parent.gl.uniformMatrix4fv(parent.shaderProgram.mvMatrixUniform, false, parent.mvMatrix)
+        return parent;
     }
 };
