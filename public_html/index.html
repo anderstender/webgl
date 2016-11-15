@@ -56,30 +56,31 @@ and open the template in the editor.
                 w.Shader.Add("#shader-fs-texture", "fragment");
                 w.Shader.Add("#shader-vs-texture", "vertex");
 
+                var texture = w.Textures.Add("resources/img/blizzard.jpg");
 
-                var i = w.Items.Add(new GLItem(w.gl));
-                var gItem = w.Items.Get(i);
-                gItem.Shaders.Set("#shader-fs-texture", "fragment");
-                gItem.Shaders.Set("#shader-vs-texture", "vertex");
+                var gItem = w.Items
+                            .Add(new GLItem(w))
+                                    .Texture.Set(
+                                        [
+                                            0.0, 0.0,
+                                            1.0, 0.0,
+                                            1.0, 1.0,
+                                            0.0, 1.0
+                                        ],
+                                        texture).Instance()
+                                    .Vertices.Set(
+                                        [
+                                            -1.0, -1.0,  1.0,
+                                            1.0, -1.0,  1.0,
+                                            1.0,  1.0,  1.0,
+                                            -1.0,  1.0,  1.0
+                                        ],
+                                        w.gl.TRIANGLES).Instance()
+                                    .Position.Set([0.0, 0.0, -8.0]).Instance();
 
-                gItem.Vertices.Set(
-                        [
-                            -1.0, -1.0,  1.0,
-                            1.0, -1.0,  1.0,
-                            1.0,  1.0,  1.0,
-                            -1.0,  1.0,  1.0
-                        ],
-                        w.gl.TRIANGLES);
-
-
-
-                gItem.Position.Set([0.0, 0.0, -8.0]);
-                gItem.Texture.Set(
-                        [   0.0, 0.0,
-                            1.0, 0.0,
-                            1.0, 1.0,
-                            0.0, 1.0]);
-                gItem.Texture.Load("resources/img/blizzard.jpg", function () {
+                w.Textures.Load(function(){
+                    w.Textures.Exec();
+                    w.Shader.Init();
                     tick();
                 });
 
@@ -89,7 +90,9 @@ and open the template in the editor.
 
 
 
-                i = w.Items.Add(new GLItem(w.gl));
+
+
+                /*i = w.Items.Add(new GLItem(w.gl));
                 var gItem2 = w.Items.Get(i);
                 gItem2.Shaders.Set("#shader-fs-texture", "fragment");
                 gItem2.Shaders.Set("#shader-vs-texture", "vertex");
@@ -197,9 +200,9 @@ and open the template in the editor.
                             1.0, 1.0,
                             0.0, 1.0]);
                 gItem6.Texture.Load("resources/img/blizzard.jpg");
+*/
 
 
-                w.Shader.Init();
 
 
 
@@ -208,11 +211,6 @@ and open the template in the editor.
                     requestAnimFrame(tick);
                     a += 1;
                     gItem.Rotate.Set(a, [0, 1, 1]);
-                    gItem2.Rotate.Set(a, [0, 1, 1]);
-                    gItem3.Rotate.Set(a, [0, 1, 1]);
-                    gItem4.Rotate.Set(a, [0, 1, 1]);
-                    gItem5.Rotate.Set(a, [0, 1, 1]);
-                    gItem6.Rotate.Set(a, [0, 1, 1]);
                     w.Draw.Exec();
                 }
 

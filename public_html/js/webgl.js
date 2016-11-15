@@ -49,7 +49,7 @@
     this.shadersList = null;
     this.Shader = new (function(){
         var Shader = this;
-
+        this.program = null;
         /*
          * path - либо селектор узла с шейдером, либо путь к файлу
          * сначала чекается как селектор,
@@ -90,7 +90,7 @@
         * если элемент не найден по селектору, то синхронным запросом пытается скачать файл
         * */
         this.Get = function(path, type){
-            var str = parent.Shader.loadCode(path);
+            var str = Shader.loadCode(path);
             if(str === null){
                 return null;
             }
@@ -134,46 +134,44 @@
          метод загружает шейдеры и устанавливает их на каждый элемент в зависимости от его настроек
          */
         this.Load = function(){
-            if(parent.Shader.list.fragment === null) {//если шейдеры не заданы, то задаем стандартные
-                parent.Shader.list.fragment = {
+            Shader.program = parent.gl.createProgram();
+            if(Shader.list.fragment === null) {//если шейдеры не заданы, то задаем стандартные
+                Shader.list.fragment = {
                     "resources/shaders/fragment/shader-fs.sx" : false
                 }
             }
-            if(parent.Shader.list.vertex === null) {//если шейдеры не заданы, то задаем стандартные
-                parent.Shader.list.vertex = {
+            if(Shader.list.vertex === null) {//если шейдеры не заданы, то задаем стандартные
+                Shader.list.vertex = {
                     "resources/shaders/vertex/shader-vs.sx" : false
                 }
             }
-
-            for(var type in parent.Shader.list){
-                var list = parent.Shader.list[type];
-                for(var path in list){
-                    var shader = list[path];
-                    if(shader === false){
-                        parent.Shader.list[type][path] = parent.Shader.Get(path, type);
+            for(var type in Shader.list){
+                for(var path in Shader.list[type]){
+                    if(Shader.list[type][path] === false){
+                        Shader.list[type][path] = Shader.Get(path, type);
+                        parent.gl.attachShader(Shader.program, Shader.list[type][path]);
                     }
                 }
             }
-            var program = parent.gl.createProgram();
-            for(var i in parent.Items.list){
-                var item = parent.Items.list[i];
-                if(item.Shaders.list === null){
-                    item.Shaders.Set("resources/shaders/fragment/shader-fs.sx", "fragment");
-                    item.Shaders.Set("resources/shaders/vertex/shader-vs.sx", "vertex");
-                }
-
-                for(var path in item.Shaders.list){
-                    var type = item.Shaders.list[path];
-                    item.Shaders.Attach(parent.Shader.list[type][path], program);
-                }
+            parent.gl.linkProgram(Shader.program);
+            if(!parent.gl.getProgramParameter(
+                    Shader.program,
+                    parent.gl.LINK_STATUS)){
+                console.log("Could not initialise shaders for item:");
+                console.log(parent);
+                console.log('------------');
             }
 
+            parent.gl.useProgram(Shader.program);
+            for(var k in parent.Items.list){
+                parent.Items.list[k].Shaders.Set(Shader.program);
+            }
         };
         
         this.Init = function(){
 
             Shader.Load();
-            
+            parent.gl.useProgram(Shader.program);
             for(var i in parent.Items.list) {
                 var item = parent.Items.list[i];
                 item.Shaders.Exec();
@@ -187,7 +185,7 @@
         this.Add = function(glItem){
             var index = Items.list.length;
             Items.list[index] = glItem;
-            return index;
+            return Items.list[index];
         };
         
         this.Get = function(index){
@@ -246,9 +244,7 @@
 
             if(Item.Shaders.params.aTextureCoord
                 && Item.Shaders.params.uSampler
-                && Item.Texture.isLoad
-                && Item.Texture.isInit) {
-
+                && Item.Texture.isSet) {
                 parent.gl.bindBuffer(
                     parent.gl.ARRAY_BUFFER,
                     Item.Texture.buffer);//buffer
@@ -315,8 +311,57 @@
         };
     });
     
-    
-    
+    this.Position = new(function(){
+        this.coords = [0.0, 0.0, 0.0];
+    });
+    this.Textures = new (function(){
+        var Textures = this;
+        this.list = {};
+        this.isLoaded = false;
+        //проверку что все текстуры загрузились сделаем через счетчик
+        //при каждой загрузке текстуры будем увеличивать счетчик, пока он не станет равен общему количеству текстур
+        this.countLoaded = 0;
+        this.count = 0;
+        this.Add = function(path){
+            this.list[path] = {
+                isLoaded : false,
+                texture : parent.gl.createTexture()
+            };
+            Textures.count = Object.keys(Textures.list).length;
+            return Textures.list[path].texture;
+            //console.log(Textures.count);
+        };
+
+        this.Load = function(callback){
+            for(var k in Textures.list){
+                console.log(k);
+                var objTex = Textures.list[k];
+                Textures.list[k].texture.image = new Image();
+                Textures.list[k].texture.image.onload = function(){
+                    Textures.list[k].isLoaded = true;
+                    Textures.countLoaded++;
+
+                    console.log('Texture "' + k + '" was loaded');
+                    console.log('---------------');
+                    if(Textures.countLoaded === Textures.count){
+                        Textures.isLoaded = true;
+                        console.log('All textures was loaded');
+                        console.log('---------------');
+                        callback();
+                    }
+                };
+                Textures.list[k].texture.image.src = k;
+            }
+        };
+
+        this.Exec = function(){
+            for(var k in parent.Items.list){
+                if(parent.Items.list[k].Texture.isSet) {
+                    parent.Items.list[k].Texture.Bind();
+                }
+            }
+        };
+    });
     this.m4 = new (function(){
         this.Translate = function(coords){
             mat4.translate(parent.mvMatrix, coords);

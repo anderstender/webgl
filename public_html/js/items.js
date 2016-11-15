@@ -4,13 +4,21 @@
  * лучше отдельно задавать свойства объекта, а потом внутри ядра их обрабатывать
  * чем париться со сложной логикой
  */
-var GLItem = function(gl){
+var GLItem = function(wGL){
     var Parent = this;
-    this.gl = gl;
+    this.context = wGL;
+    this.gl = this.context.gl;
     this.mvMatrix = mat4.create();
     this.pMatrix = mat4.create();
     this.nMatrix = mat4.create();
 
+    this.Instance = function () {
+        return Parent;
+    };
+
+    this.Context = function () {
+        return Parent.context;
+    }
 
     this.Matrix = new(function () {
         var Matrix = this;
@@ -29,6 +37,7 @@ var GLItem = function(gl){
 
             mat4.set(Parent.Rotate.matrix, matrixObj.rotate);
             Matrix.stack.push(matrixObj);
+            return Matrix;
         };
 
         this.Pop = function(){
@@ -41,6 +50,11 @@ var GLItem = function(gl){
             Parent.pMatrix = matrixObj.pMatrix;
 
             Parent.Rotate.matrix = matrixObj.rotate;
+            return Matrix;
+        };
+
+        this.Instance = function(){
+            return Parent;
         };
     });
 
@@ -48,20 +62,7 @@ var GLItem = function(gl){
 
     this.Shaders = new (function () {
         var Shaders = this;
-        this.program = Parent.gl.createProgram();
-
-        this.list = null;
-        this.Set = function(path, type, callback){
-            if(Shaders.list === null){
-                Shaders.list = {};
-            }
-            Shaders.list[path] = type;
-            Shaders.isInit = true;
-
-            if(typeof callback === "function"){
-                callback();
-            }
-        };
+        this.program = null;
         this.isInit = false;
         this.params = {
             //параметры для передачи вершин в шейдеры
@@ -76,21 +77,14 @@ var GLItem = function(gl){
         };
 
 
-        this.Attach = function(shader, program){
-            Shaders.program = program;
-            Parent.gl.attachShader(Shaders.program, shader);
+        this.Set = function(program){
+            Parent.Shaders.program = program;
+            return Shaders;
         };
         this.Exec = function(){
-            Parent.gl.linkProgram(Shaders.program);
-            if(!Parent.gl.getProgramParameter(
-                    Shaders.program,
-                    Parent.gl.LINK_STATUS)){
-                console.log("Could not initialise shaders for item:");
-                console.log(Parent);
-                console.log('------------');
-            }
 
-            Parent.gl.useProgram(Shaders.program);
+
+
             /*
             * чекаем что установлен список вершин
             * */
@@ -105,7 +99,7 @@ var GLItem = function(gl){
                 }
                 if (Shaders.params.aTextureCoord
                     && Shaders.params.uSampler
-                    && Parent.Texture.isInit) {
+                    && Parent.Texture.isSet) {
                     Shaders.program.textureCoordAttribute = Parent.gl.getAttribLocation(Shaders.program, "aTextureCoord");
                     Parent.gl.enableVertexAttribArray(Shaders.program.textureCoordAttribute);
                 }
@@ -121,11 +115,15 @@ var GLItem = function(gl){
 
                 if (Shaders.params.aTextureCoord
                     && Shaders.params.uSampler
-                    && Parent.Texture.isInit) {
+                    && Parent.Texture.isSet) {
                     Shaders.program.samplerUniforms = Parent.gl.getUniformLocation(Shaders.program, "uSampler");
                 }
             }
             Shaders.isInit = true;
+            return Shaders;
+        };
+        this.Instance = function(){
+            return Parent;
         };
     });
 
@@ -142,26 +140,9 @@ var GLItem = function(gl){
         this.numItems = 0;
         this.itemSize = 2;
         this.buffer = Parent.gl.createBuffer();
-        this.isInit = false;
-        this.isLoad = false;
-        this.Load = function (path, callback) {
-            Texture.texture = Parent.gl.createTexture();
-            Texture.texture.image = new Image();
-            Texture.isLoad = false;
-            Texture.texture.image.onload = function () {
-                Texture.loadHandler();
-                if(typeof callback === 'function') {
-                    callback();
-                };
+        this.isSet = false;
 
-                console.log('Texture "' + path + '" was loaded');
-                console.log('---------------');
-            }
-
-            Texture.texture.image.src = path;
-        };
-
-        this.loadHandler = function(){
+        this.Bind = function(){
             Parent.gl.bindTexture(Parent.gl.TEXTURE_2D, Texture.texture);
 
             Parent.gl.pixelStorei(Parent.gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -185,13 +166,14 @@ var GLItem = function(gl){
                 Parent.gl.NEAREST);
 
             Parent.gl.bindTexture(Parent.gl.TEXTURE_2D, null);
-            Texture.isLoad = true;
+            return Texture;
         };
 
-        this.Set = function(coords){
-            Texture.coords = coords;
-            Texture.numItems = parseInt(Texture.coords.length / Texture.itemSize);
+        this.Set = function(coords, texture){
 
+            Texture.coords = coords;
+
+            Texture.numItems = parseInt(Texture.coords.length / Texture.itemSize);
             Texture.buffer.numItems = Texture.numItems;
             Texture.buffer.itemSize = Texture.itemSize;
 
@@ -204,6 +186,17 @@ var GLItem = function(gl){
             Texture.indexBuffer.numItems = Texture.indexes.length;
             Texture.indexBuffer.itemSize = 1;
             Texture.isInit = true;
+
+            Texture.texture = texture;
+
+            if(texture && coords){
+                Texture.isSet = true;
+            }
+            return Texture;
+        };
+
+        this.Instance = function(){
+            return Parent;
         };
     });
 
@@ -232,6 +225,11 @@ var GLItem = function(gl){
             
             Vertices.glType = glType;
             Vertices.isInit = true;
+            return Vertices;
+        };
+
+        this.Instance = function(){
+            return Parent;
         };
     });
     
@@ -248,6 +246,10 @@ var GLItem = function(gl){
             
             Colors.buffer.numItems = Colors.numItems;
             Colors.buffer.itemSize = Colors.itemSize;
+            return Colors;
+        };
+        this.Instance = function(){
+            return Parent;
         };
     });
     this.Position = new (function(){
@@ -269,7 +271,8 @@ var GLItem = function(gl){
             for(var i in Parent.Childs.list){
                 Parent.Childs.list[i].Position.Translate(Parent.Position.translate);
             }
-        }
+            return Position;
+        };
         
         this.Set = function(coords){  
             Position.coords[0] += coords[0];
@@ -279,6 +282,10 @@ var GLItem = function(gl){
             for(var i in Parent.Childs.list){
                 Parent.Childs.list[i].Position.Set(coords);
             }
+            return Position;
+        };
+        this.Instance = function(){
+            return Parent;
         };
     });
     
@@ -319,6 +326,7 @@ var GLItem = function(gl){
                     coords : [0.0, 0.0, 0.0]
                 }
             ];
+            return Rotate;
         };
 
         this.Set = function(angle, coords){
@@ -333,8 +341,11 @@ var GLItem = function(gl){
                     Rotate.rotates[i].coords[i] = coords[i];
                 }
             }
+            return Rotate;
         };
-        
+        this.Instance = function(){
+            return Parent;
+        };
     });
     
     this.Childs = new(function(){
@@ -357,6 +368,9 @@ var GLItem = function(gl){
         
         this.Get = function(index){
             return Childs.list[index];
+        };
+        this.Instance = function(){
+            return Parent;
         };
     });
     
