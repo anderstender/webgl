@@ -15,7 +15,8 @@
         parent.sceneParams[key] = value;
         return parent;
     };
-    
+
+    this.startRenderTime = false;
     this.init = function(id){
         parent.mvMatrix = mat4.create();
         parent.pMatrix = mat4.create();
@@ -46,7 +47,8 @@
         return parent;
     };
     this.shaderProgram = null;
-    this.shadersList = null;
+    this.needShowFPS = true;
+
     this.Shader = new (function(){
         var Shader = this;
         this.program = null;
@@ -205,7 +207,7 @@
             delete Items.list[index];
             return Items;
         };
-        this.rDraw = function(Item){
+        this.Draw = function(Item){
 
 
             mat4.perspective(parent.sceneParams.angle, parent.gl.viewportWidth / parent.gl.viewportHeight,
@@ -309,15 +311,8 @@
             Item.Matrix.Pop();
             return Items;
         };
-        
-        this.Draw = function(index){
-            var Item = parent.Items.Get(index);
-            parent.Items.rDraw(Item);
-            return Items;
-        };
-        
+
         this.setMatUniform = function(Item){
-            //var Item = parent.Items.Get(index);
             parent.gl.uniformMatrix4fv(Item.Shaders.program.pMatrixUniform, false, Item.pMatrix);
             parent.gl.uniformMatrix4fv(Item.Shaders.program.mvMatrixUniform, false, Item.mvMatrix);
             return Items;
@@ -447,7 +442,9 @@
             return Draw;
         };
         this.Exec = function(){
-
+            if(parent.startRenderTime === false){
+                parent.startRenderTime = (new Date()).getMilliseconds();
+            }
 
 
             parent.Draw.Start();
@@ -455,10 +452,18 @@
 
 
             for(var i in parent.Items.list){
-                parent.Items.Draw(i);
+                parent.Items.Draw(parent.Items.list[i]);
             }
             return Draw;
         };
+
+        this.Instance = function(){
+            return parent;
+        }
+    });
+
+    this.Animate = new (function(){
+        var Animate = this;
 
         this.Instance = function(){
             return parent;
