@@ -207,6 +207,22 @@
             delete Items.list[index];
             return Items;
         };
+        
+        this.Rotate = function(angle, coords){
+            for(var i in parent.Items.list) {
+                parent.Items.list[i].Rotate.Set(angle, coords);
+            }
+            return Items;
+        };
+        
+        
+        this.Translate = function(coords){
+            for(var i in parent.Items.list) {
+                parent.Items.list[i].Position.Translate(coords);
+            }
+            return Items;
+        };
+        
         this.Draw = function(Item){
 
 

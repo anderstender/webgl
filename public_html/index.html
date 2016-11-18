@@ -94,37 +94,39 @@ and open the template in the editor.
                     1.0, 1.0,
                     0.0, 1.0
                 ];
-                var w = new WebGL();
+                var webGlScene = new WebGL();
                 var textPath = "resources/img/blizzard.jpg";
-                w.init('webgl_box')
+                webGlScene.init('webgl_box')
                         .Shader
                             .Add("#shader-fs-texture", "fragment")
                             .Add("#shader-vs-texture", "vertex").Instance()
                         .Textures
                             .Add(textPath)
                             .Load(function(){
-                                w.Textures.Exec();
-                                w.Shader.Init();
+                                webGlScene.Textures.Exec();
+                                webGlScene.Shader.Init();
                                 tick();
                             }).Instance();
                 for(var i in arPolygons ){
-                    w.Items
-                        .Add(new GLItem(w))
-                            .Texture.Set(arTextCoors, w.Textures.Get(textPath)).Instance()
+                    webGlScene.Items
+                        .Add(new GLItem(webGlScene))
+                            .Texture.Set(arTextCoors, webGlScene.Textures.Get(textPath)).Instance()
                             .Vertices.Set(
                                 arPolygons[i],
-                                w.gl.TRIANGLES).Instance()
+                                webGlScene.gl.TRIANGLES).Instance()
                             .Position.Set(arPos).Instance();
                 };
 
                 var a = 1;
+                webGlScene.Items.Translate([0,0,-2]);
                 function tick() {
                     reqAFrame(tick);
                     a += 1;
-                    for(var i in w.Items.list) {
-                        w.Items.list[i].Rotate.Set(a, [0, 1, 1]);
-                    }
-                    w.Draw.Exec();
+                    
+                    webGlScene
+                            .Items
+                                .Rotate(a, [0, 1, 1]).Instance()
+                            .Draw.Exec();
                 }
                 var reqAFrame = (function() {
                     return window.requestAnimationFrame ||
