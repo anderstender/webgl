@@ -5,7 +5,7 @@
     
     this.mvMatrix = null;//mat4.create();
     this.pMatrix = null;//mat4.create();
-    
+    this.firstDraw = false;
     this.sceneParams = {
         angle : 45.0,
         front : 0.1,
@@ -62,7 +62,10 @@
                 return null;
             }
             var strCode = null;
-            var shElement = document.querySelector(path);
+            var shElement = false;
+            try {
+                shElement = document.querySelector(path);
+            } catch (e){}
             if(shElement){
                 strCode = "";
                 var k = shElement.firstChild;
@@ -176,7 +179,7 @@
         this.Init = function(){
 
             Shader.Load();
-            parent.gl.useProgram(Shader.program);
+            //parent.gl.useProgram(Shader.program);
             for(var i in parent.Items.list) {
                 var item = parent.Items.list[i];
                 item.Shaders.Exec();
@@ -188,6 +191,42 @@
         this.Instance = function(){
             return parent;
         }
+    });
+
+    this.Lighting = new(function(){
+        var Lighting = this;
+        this.params = {
+            directed :{
+                color :{
+                    ambient : [0.1, 0.1, 0.1],
+                    direction : [0.9, 0.9, 0.9]
+                },
+                vector : [-0.25, -0.25, -1]
+            }
+        };
+
+        this.Directed = new (function(){
+            var Directed = this;
+            this.AmbientColor = function (vectColor) {
+                Lighting.params.directed.color.ambient = vectColor;
+                return Directed;
+            };
+            this.DirectionColor = function (vectColor) {
+                Lighting.params.directed.color.direction = vectColor;
+                return Directed;
+            };
+            this.Vector = function (vect) {
+                Lighting.params.directed.vector = vect;
+                return Directed;
+            };
+            this.Parent = function(){
+                return Lighting;
+            };
+        });
+
+        this.Instance = function(){
+            return parent;
+        };
     });
 
     this.Items = new (function(){
@@ -224,8 +263,6 @@
         };
         
         this.Draw = function(Item){
-
-
             mat4.perspective(parent.sceneParams.angle, parent.gl.viewportWidth / parent.gl.viewportHeight,
                             parent.sceneParams.front, parent.sceneParams.back, Item.pMatrix);
             mat4.identity(Item.mvMatrix);
@@ -244,31 +281,22 @@
                 parent.gl.bindBuffer(parent.gl.ARRAY_BUFFER,
                     Item.Vertices.buffer);
 
-                parent.gl.bufferData(parent.gl.ARRAY_BUFFER,
-                    new Float32Array(Item.Vertices.coords),
-                    parent.gl.STATIC_DRAW);
-
                 parent.gl.vertexAttribPointer(Item.Shaders.program.vertexPositionAttribute,
                     Item.Vertices.buffer.itemSize,
                     parent.gl.FLOAT, false, 0, 0);
-
             }
             if(Item.Shaders.params.aVertexColor) {
                 //натягиваем цвет
                 parent.gl.bindBuffer(parent.gl.ARRAY_BUFFER,
                     Item.Colors.buffer);
 
-                parent.gl.bufferData(parent.gl.ARRAY_BUFFER,
-                    new Float32Array(Item.Colors.coords),
-                    parent.gl.STATIC_DRAW);
-
-
                 parent.gl.vertexAttribPointer(Item.Shaders.program.vertexColorAttribute,
                     Item.Colors.buffer.itemSize,
                     parent.gl.FLOAT,
                     false, 0, 0);
-
             }
+
+
 
             if(Item.Shaders.params.aTextureCoord
                 && Item.Shaders.params.uSampler
@@ -276,54 +304,52 @@
                 parent.gl.bindBuffer(
                     parent.gl.ARRAY_BUFFER,
                     Item.Texture.buffer);//buffer
-
-                parent.gl.bufferData(
-                    parent.gl.ARRAY_BUFFER,
-                    new Float32Array(Item.Texture.coords),
-                    parent.gl.STATIC_DRAW);
-
                 parent.gl.vertexAttribPointer(
                     Item.Shaders.program.textureCoordAttribute,
                     Item.Texture.buffer.itemSize,
                     parent.gl.FLOAT, false, 0, 0);
-
-                parent.gl.bindBuffer(
-                    parent.gl.ELEMENT_ARRAY_BUFFER,
-                    Item.Texture.indexBuffer);//indexBuffer
-
-                parent.gl.bufferData(
-                    parent.gl.ELEMENT_ARRAY_BUFFER,
-                    new Uint16Array(Item.Texture.indexes),
-                    parent.gl.STATIC_DRAW);
-
                 parent.gl.activeTexture(parent.gl.TEXTURE0);
-
-                parent.gl.bindTexture(
-                    parent.gl.TEXTURE_2D,
-                    Item.Texture.texture);
-                parent.gl.uniform1i(
-                    Item.Shaders.program.samplerUniform,
-                    0);
+                parent.gl.bindTexture(parent.gl.TEXTURE_2D, Item.Texture.texture);
+                parent.gl.uniform1i(Item.Shaders.program.samplerUniform, 0);
             }
+
+            if(Item.Shaders.params.enableLight) {
+
+                parent.gl.bindBuffer(parent.gl.ARRAY_BUFFER, Item.Normal.buffer);
+                parent.gl.vertexAttribPointer(Item.Shaders.program.vertexNormalAttribute,
+                    Item.Normal.buffer.itemSize,
+                    parent.gl.FLOAT,
+                    false, 0, 0);
+
+                parent.gl.uniform1i(Item.Shaders.program.useLightingUniform, true);
+                parent.gl.uniform3f(
+                    Item.Shaders.program.ambientColorUniform,
+                    parent.Lighting.params.directed.color.ambient[0],
+                    parent.Lighting.params.directed.color.ambient[1],
+                    parent.Lighting.params.directed.color.ambient[2]
+                );
+
+                var adjustedLD = vec3.create();
+                vec3.normalize(parent.Lighting.params.directed.vector, adjustedLD);
+                vec3.scale(adjustedLD, -1);
+                parent.gl.uniform3fv(Item.Shaders.program.lightingDirectionUniform, adjustedLD);
+
+                parent.gl.uniform3f(
+                    Item.Shaders.program.directionalColorUniform,
+                    parent.Lighting.params.directed.color.direction[0],
+                    parent.Lighting.params.directed.color.direction[1],
+                    parent.Lighting.params.directed.color.direction[2]
+                );
+            }
+
+            parent.gl.bindBuffer(parent.gl.ELEMENT_ARRAY_BUFFER, Item.Vertices.indexBuffer);
             parent.Items.setMatUniform(Item);
-            if(Item.Shaders.params.aTextureCoord) {
-                parent.gl.drawElements(
-                    parent.gl.TRIANGLES,
-                    Item.Texture.indexBuffer.numItems,
-                    parent.gl.UNSIGNED_SHORT,
-                    0);
-            }else {
-                parent.gl.drawArrays(
-                    Item.Vertices.glType,
-                    0,
-                    Item.Vertices.buffer.numItems);
-            }
 
-
-            for(var i in Item.Childs.list){
-                parent.Items.rDraw(Item.Childs.Get(i));
-            }
-
+            parent.gl.drawElements(
+                parent.gl.TRIANGLES,
+                Item.Vertices.indexBuffer.numItems,
+                parent.gl.UNSIGNED_SHORT,
+                0);
             Item.Matrix.Pop();
             return Items;
         };
@@ -331,6 +357,13 @@
         this.setMatUniform = function(Item){
             parent.gl.uniformMatrix4fv(Item.Shaders.program.pMatrixUniform, false, Item.pMatrix);
             parent.gl.uniformMatrix4fv(Item.Shaders.program.mvMatrixUniform, false, Item.mvMatrix);
+            Item.nMatrix = mat3.create();
+            mat4.toInverseMat3(Item.mvMatrix, Item.nMatrix);
+            mat3.transpose(Item.nMatrix);
+            parent.gl.uniformMatrix3fv(Item.Shaders.program.nMatrixUniform, false, Item.nMatrix);
+
+
+
             return Items;
         };
         this.Instance = function(){
@@ -464,9 +497,6 @@
 
 
             parent.Draw.Start();
-            //parent.m4.Translate([0.0,0.0, -5]);
-
-
             for(var i in parent.Items.list){
                 parent.Items.Draw(parent.Items.list[i]);
             }

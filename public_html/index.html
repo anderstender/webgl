@@ -14,6 +14,7 @@ and open the template in the editor.
         <script type="text/javascript" src="js/webgl.js"></script>
         <script type="text/javascript" src="js/items.js"></script>
 
+        <script type="text/javascript" src="data/variables.js"></script>
         <script id="shader-fs-texture" type="x-shader/x-fragment">
             precision mediump float;
 
@@ -50,82 +51,47 @@ and open the template in the editor.
             " width="500" height="500"></canvas>
             
         <script type="text/javascript">
-                var arPos = [0.0, 0.0, -8.0];
-                var  arPolygons = [
-                    [
-                        -1.0, -1.0,  1.0,
-                        1.0, -1.0,  1.0,
-                        1.0,  1.0,  1.0,
-                        -1.0,  1.0,  1.0
-                    ],
-                    [
-                        -1.0, -1.0,  -1.0,
-                        1.0, -1.0,  -1.0,
-                        1.0,  1.0,  -1.0,
-                        -1.0,  1.0,  -1.0
-                    ],
-                    [
-                        -1.0, -1.0,  -1.0,
-                        -1.0, 1.0,  -1.0,
-                        -1.0,  1.0,  1.0,
-                        -1.0,  -1.0,  1.0
-                    ],
-                    [
-                        1.0, -1.0,  -1.0,
-                        1.0, 1.0,  -1.0,
-                        1.0,  1.0,  1.0,
-                        1.0,  -1.0,  1.0
-                    ],
-                    [
-                        -1.0, 1.0,  -1.0,
-                        -1.0, 1.0,  1.0,
-                        1.0,  1.0,  1.0,
-                        1.0,  1.0,  -1.0
-                    ],[
-                        -1.0, -1.0,  -1.0,
-                        -1.0, -1.0,  1.0,
-                        1.0,  -1.0,  1.0,
-                        1.0,  -1.0,  -1.0
-                    ]
-                ];
-                var arTextCoors = [
-                    0.0, 0.0,
-                    1.0, 0.0,
-                    1.0, 1.0,
-                    0.0, 1.0
-                ];
+
                 var webGlScene = new WebGL();
                 var textPath = "resources/img/blizzard.jpg";
                 webGlScene.init('webgl_box')
                         .Shader
-                            .Add("#shader-fs-texture", "fragment")
-                            .Add("#shader-vs-texture", "vertex").Instance()
+                            .Add("resources/shaders/fragment/shader-fs-light.sx", "fragment")
+                            .Add("resources/shaders/vertex/shader-vs-light.sx", "vertex").Instance()
                         .Textures
                             .Add(textPath)
                             .Load(function(){
                                 webGlScene.Textures.Exec();
                                 webGlScene.Shader.Init();
                                 tick();
-                            }).Instance();
-                for(var i in arPolygons ){
+                            }).Instance()
+                        .Lighting
+                            .Directed
+                                .Vector([-1, -0.2, -0.4]).Parent().Instance();
+                for(var i in arPolygons){
                     webGlScene.Items
                         .Add(new GLItem(webGlScene))
-                            .Texture.Set(arTextCoors, webGlScene.Textures.Get(textPath)).Instance()
+                            .Texture.Set(
+                                arTextCoors,
+                                webGlScene.Textures.Get(textPath)).Instance()
                             .Vertices.Set(
                                 arPolygons[i],
                                 webGlScene.gl.TRIANGLES).Instance()
-                            .Position.Set(arPos).Instance();
+                            .Normal.Set(
+                                arNormals[i]).Instance()
+                            .Position
+                                .Set(arPos)
+                                .Translate([0.0,0.0,0.0]).Instance();
                 };
 
                 var a = 1;
-                webGlScene.Items.Translate([0,0,-2]);
                 function tick() {
                     reqAFrame(tick);
-                    a += 1;
+                    a += 0.5;
                     
                     webGlScene
                             .Items
-                                .Rotate(a, [0, 1, 1]).Instance()
+                                .Rotate(a, [1, 1, 0]).Instance()
                             .Draw.Exec();
                 }
                 var reqAFrame = (function() {
@@ -135,7 +101,7 @@ and open the template in the editor.
                             window.oRequestAnimationFrame ||
                             window.msRequestAnimationFrame ||
                             function(callback) {
-                                window.setTimeout(callback, 1000/60);
+                                window.setTimeout(callback, 1000/20);
                             };
                 })();
         </script>

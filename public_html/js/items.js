@@ -10,7 +10,7 @@ var GLItem = function(wGL){
     this.gl = this.context.gl;
     this.mvMatrix = mat4.create();
     this.pMatrix = mat4.create();
-    this.nMatrix = mat4.create();
+    this.nMatrix = mat3.create();
 
     this.Instance = function () {
         return Parent;
@@ -25,17 +25,17 @@ var GLItem = function(wGL){
         this.stack = [];
 
         this.Push = function(){
-            var copy = mat4.create();
-
             var matrixObj = {
                 mvMatrix : mat4.create(),
                 pMatrix  : mat4.create(),
-                rotate   : mat4.create()
+                rotate   : mat4.create(),
+                nMatrix  : mat3.create()
             };
             mat4.set(Parent.mvMatrix, matrixObj.mvMatrix);
             mat4.set(Parent.pMatrix, matrixObj.pMatrix);
-
             mat4.set(Parent.Rotate.matrix, matrixObj.rotate);
+            mat4.set(Parent.nMatrix, matrixObj.nMatrix);
+
             Matrix.stack.push(matrixObj);
             return Matrix;
         };
@@ -48,8 +48,8 @@ var GLItem = function(wGL){
             var matrixObj = Matrix.stack.pop();
             Parent.mvMatrix = matrixObj.mvMatrix;
             Parent.pMatrix = matrixObj.pMatrix;
-
             Parent.Rotate.matrix = matrixObj.rotate;
+            Parent.nMatrix = matrixObj.nMatrix;
             return Matrix;
         };
 
@@ -67,12 +67,10 @@ var GLItem = function(wGL){
         this.params = {
             //параметры для передачи вершин в шейдеры
             'aVertexPosition' : true,
-            'aVertexColor'    : false,
+            'aVertexColor'    : true,
             'aTextureCoord'   : true,
-
+            'enableLight'     : true,
             //параметры для передачи матриц
-            'uPMatrix'  : true,//
-            'uMVMatrix' : true,
             'uSampler'  : true
         };
 
@@ -82,9 +80,6 @@ var GLItem = function(wGL){
             return Shaders;
         };
         this.Exec = function(){
-
-
-
             /*
             * чекаем что установлен список вершин
             * */
@@ -93,30 +88,37 @@ var GLItem = function(wGL){
                     Shaders.program.vertexPositionAttribute = Parent.gl.getAttribLocation(Shaders.program, "aVertexPosition");
                     Parent.gl.enableVertexAttribArray(Shaders.program.vertexPositionAttribute);
                 }
-                if (Shaders.params.aVertexColor) {
-                    Shaders.program.vertexColorAttribute = Parent.gl.getAttribLocation(Shaders.program, "aVertexColor");
-                    Parent.gl.enableVertexAttribArray(Shaders.program.vertexColorAttribute);
-                }
+
+
+
                 if (Shaders.params.aTextureCoord
                     && Shaders.params.uSampler
                     && Parent.Texture.isSet) {
                     Shaders.program.textureCoordAttribute = Parent.gl.getAttribLocation(Shaders.program, "aTextureCoord");
                     Parent.gl.enableVertexAttribArray(Shaders.program.textureCoordAttribute);
-                }
 
-
-                if (Shaders.params.uPMatrix) {
-                    Shaders.program.pMatrixUniform = Parent.gl.getUniformLocation(Shaders.program, "uPMatrix");
-                }
-
-                if (Shaders.params.uMVMatrix) {
-                    Shaders.program.mvMatrixUniform = Parent.gl.getUniformLocation(Shaders.program, "uMVMatrix");
-                }
-
-                if (Shaders.params.aTextureCoord
-                    && Shaders.params.uSampler
-                    && Parent.Texture.isSet) {
                     Shaders.program.samplerUniforms = Parent.gl.getUniformLocation(Shaders.program, "uSampler");
+                }
+
+                if (Shaders.params.aVertexColor) {
+                    Shaders.program.vertexColorAttribute = Parent.gl.getAttribLocation(Shaders.program, "aVertexColor");
+                    Parent.gl.enableVertexAttribArray(Shaders.program.vertexColorAttribute);
+                }
+
+
+                Shaders.program.pMatrixUniform = Parent.gl.getUniformLocation(Shaders.program, "uPMatrix");
+                Shaders.program.mvMatrixUniform = Parent.gl.getUniformLocation(Shaders.program, "uMVMatrix");
+
+
+                if(Shaders.params.enableLight){
+                    Shaders.program.vertexNormalAttribute = Parent.gl.getAttribLocation(Shaders.program, "aVertexNormal");
+                    Parent.gl.enableVertexAttribArray(Shaders.program.vertexNormalAttribute);
+
+                    Shaders.program.nMatrixUniform = Parent.gl.getUniformLocation(Shaders.program, "uNMatrix");
+                    Shaders.program.useLightingUniform = Parent.gl.getUniformLocation(Shaders.program, "uUseLighting");
+                    Shaders.program.ambientColorUniform = Parent.gl.getUniformLocation(Shaders.program, "uAmbientColor");
+                    Shaders.program.lightingDirectionUniform = Parent.gl.getUniformLocation(Shaders.program, "uLightingDirection");
+                    Shaders.program.directionalColorUniform = Parent.gl.getUniformLocation(Shaders.program, "uDirectionalColor");
                 }
             }
             Shaders.isInit = true;
@@ -127,6 +129,34 @@ var GLItem = function(wGL){
         };
     });
 
+    this.Normal = new(function(){
+        var Normal = this;
+        this.coords = [];
+        this.numItems = 0;
+        this.itemSize = 3;
+        this.buffer = Parent.gl.createBuffer();
+        this.isSet = false;
+
+        this.Set = function(coords){
+            Normal.coords = coords;
+
+            Normal.numItems = parseInt(Normal.coords.length / Normal.itemSize);
+            Normal.buffer.numItems = Normal.numItems;
+            Normal.buffer.itemSize = Normal.itemSize;
+
+            if(Parent.Shaders.params.enableLight) {
+                Parent.gl.bindBuffer(Parent.gl.ARRAY_BUFFER, Normal.buffer);
+                Parent.gl.bufferData(Parent.gl.ARRAY_BUFFER, new Float32Array(Normal.coords), Parent.gl.STATIC_DRAW);
+            }
+
+            Normal.isSet = true;
+            return Normal;
+        };
+
+        this.Instance = function(){
+            return Parent;
+        };
+    });
 
     this.Texture = new (function () {
         var Texture = this;
@@ -164,7 +194,7 @@ var GLItem = function(wGL){
                 Parent.gl.TEXTURE_2D,
                 Parent.gl.TEXTURE_MIN_FILTER,
                 Parent.gl.NEAREST);
-
+            Parent.gl.generateMipmap( Parent.gl.TEXTURE_2D);
             Parent.gl.bindTexture(Parent.gl.TEXTURE_2D, null);
             return Texture;
         };
@@ -176,22 +206,21 @@ var GLItem = function(wGL){
             Texture.numItems = parseInt(Texture.coords.length / Texture.itemSize);
             Texture.buffer.numItems = Texture.numItems;
             Texture.buffer.itemSize = Texture.itemSize;
-
-            Texture.indexes = [];
-            for(var i = 0; i < Texture.buffer.numItems - 1; i++){
-                Texture.indexes[Texture.indexes.length] = 0;
-                Texture.indexes[Texture.indexes.length] = i;
-                Texture.indexes[Texture.indexes.length] = i + 1;
-            }
-            Texture.indexBuffer.numItems = Texture.indexes.length;
-            Texture.indexBuffer.itemSize = 1;
             Texture.isInit = true;
 
             Texture.texture = texture;
 
+            if(Parent.Shaders.params.aTextureCoord
+                && Parent.Shaders.params.uSampler) {
+
+                Parent.gl.bindBuffer(Parent.gl.ARRAY_BUFFER, Texture.buffer);//buffer
+                Parent.gl.bufferData(Parent.gl.ARRAY_BUFFER, new Float32Array(Texture.coords),Parent.gl.STATIC_DRAW);
+            }
+
             if(texture && coords){
                 Texture.isSet = true;
             }
+            //Texture.Bind();
             return Texture;
         };
 
@@ -206,6 +235,9 @@ var GLItem = function(wGL){
         this.numItems = 0;
         this.itemSize = 3;
         this.buffer = Parent.gl.createBuffer();
+        this.indexes = [];
+        this.indexBuffer = Parent.gl.createBuffer();
+
         this.glType = null;
         this.isInit = false;
         this.Set = function(coords, glType){
@@ -222,7 +254,35 @@ var GLItem = function(wGL){
                 }
                 Parent.Colors.Set(colors);
             }
-            
+
+
+            for(var i = 1; i < Vertices.buffer.numItems - 1; i++){
+                Vertices.indexes[Vertices.indexes.length] = 0;
+                Vertices.indexes[Vertices.indexes.length] = i;
+                Vertices.indexes[Vertices.indexes.length] = i + 1;
+            }
+            Vertices.indexBuffer.numItems = Vertices.indexes.length;
+            Vertices.indexBuffer.itemSize = 1;
+
+
+            if(Parent.Shaders.params.aVertexPosition) {
+                //ставим координаты вершин
+                Parent.gl.bindBuffer(Parent.gl.ARRAY_BUFFER,
+                    Vertices.buffer);
+
+                Parent.gl.bufferData(Parent.gl.ARRAY_BUFFER,
+                    new Float32Array(Vertices.coords),
+                    Parent.gl.STATIC_DRAW);
+
+
+                Parent.gl.bindBuffer(Parent.gl.ELEMENT_ARRAY_BUFFER,
+                    Vertices.indexBuffer);
+                Parent.gl.bufferData(Parent.gl.ELEMENT_ARRAY_BUFFER,
+                    new Uint16Array(Vertices.indexes),
+                    Parent.gl.STATIC_DRAW);
+            }
+
+
             Vertices.glType = glType;
             Vertices.isInit = true;
             return Vertices;
@@ -246,6 +306,13 @@ var GLItem = function(wGL){
             
             Colors.buffer.numItems = Colors.numItems;
             Colors.buffer.itemSize = Colors.itemSize;
+
+            if(Parent.Shaders.params.aVertexColor) {
+                //натягиваем цвет
+                Parent.gl.bindBuffer(Parent.gl.ARRAY_BUFFER, Colors.buffer);
+                Parent.gl.bufferData(Parent.gl.ARRAY_BUFFER, new Float32Array(Colors.coords), Parent.gl.STATIC_DRAW);
+            }
+
             return Colors;
         };
         this.Instance = function(){
@@ -266,11 +333,8 @@ var GLItem = function(wGL){
                 Parent.Vertices.coords[i+0] += Parent.Position.translate[0];
                 Parent.Vertices.coords[i+1] += Parent.Position.translate[1];
                 Parent.Vertices.coords[i+2] += Parent.Position.translate[2];
-            } 
-            
-            for(var i in Parent.Childs.list){
-                Parent.Childs.list[i].Position.Translate(Parent.Position.translate);
             }
+            Parent.Vertices.Set(Parent.Vertices.coords, Parent.Vertices.glType);
             return Position;
         };
         
