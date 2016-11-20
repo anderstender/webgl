@@ -6,12 +6,19 @@
 
     uniform sampler2D uSampler;
     uniform bool uUseTexture;
+    uniform float uAlpha;
+    uniform bool useBlend;
 
     void main(void) {
         vec4 textureColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+        float alpha = uAlpha;
+        if(!useBlend){
+            alpha = 1.0;
+        }
+
         if(uUseTexture){
-            gl_FragColor = vec4(textureColor.rgb * vLightWeighting, textureColor.a) * vColor;
+            gl_FragColor = vec4(textureColor.rgb * vLightWeighting, textureColor.a * alpha) * vColor;
         }else{
-            gl_FragColor = vec4(vLightWeighting, vColor.a) * vColor;
+            gl_FragColor = vec4(vLightWeighting, vColor.a * uAlpha) * vColor;
         }
     }

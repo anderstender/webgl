@@ -198,8 +198,8 @@
         this.params = {
             directed :{
                 color :{
-                    ambient : [0.1, 0.1, 0.1],
-                    direction : [0.9, 0.9, 0.9]
+                    ambient : [0.2, 0.2, 0.2],
+                    direction : [0.8, 0.8, 0.8]
                 },
                 vector : [-0.25, -0.25, -1]
             }
@@ -340,10 +340,27 @@
                 );
             }
             parent.gl.uniform1i(Item.Shaders.program.useLightingUniform, Item.Shaders.params.enableLight);
+            parent.gl.blendFunc(parent.gl.SRC_ALPHA, parent.gl.ONE);
+            if(Item.Parameters.Depth.params.enabled) {
+                parent.gl.enable(parent.gl.DEPTH_TEST);
+            }else{
+                parent.gl.disable(parent.gl.DEPTH_TEST);
+            }
 
+            parent.gl.uniform1f(Item.Shaders.program.useBlendUniform, Item.Parameters.Blend.params.enabled);
+            if(Item.Parameters.Blend.params.enabled) {
+
+                parent.gl.enable(parent.gl.BLEND);
+                parent.gl.uniform1f(Item.Shaders.program.alphaUniform, Item.Parameters.Blend.params.alpha);
+            }else{
+                parent.gl.disable(parent.gl.BLEND);
+            }
 
             parent.gl.bindBuffer(parent.gl.ELEMENT_ARRAY_BUFFER, Item.Vertices.indexBuffer);
             parent.Items.setMatUniform(Item);
+
+
+
 
             parent.gl.drawElements(
                 parent.gl.TRIANGLES,
@@ -481,7 +498,7 @@
         var Draw = this;
         this.Start =  function(){
             parent.gl.clearColor(0.0, 0.0, 0.0, 1.0);
-            parent.gl.enable(parent.gl.DEPTH_TEST);
+
             
             parent.gl.viewport(0, 0, 
                             parent.gl.viewportWidth, parent.gl.viewportHeight);

@@ -15,34 +15,6 @@ and open the template in the editor.
         <script type="text/javascript" src="js/items.js"></script>
 
         <script type="text/javascript" src="data/variables.js"></script>
-         <script id="shader-fs-texture" type="x-shader/x-fragment">
-            precision mediump float;
-
-            varying vec2 vTextureCoord;
-
-            uniform sampler2D uSampler;
-
-            void main(void) {
-                gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
-            }
-        </script>
-
-        <script id="shader-vs-texture" type="x-shader/x-vertex">
-            attribute vec3 aVertexPosition;
-            attribute vec2 aTextureCoord;
-
-            uniform mat4 uMVMatrix;
-            uniform mat4 uPMatrix;
-
-            varying vec2 vTextureCoord;
-
-
-            void main(void) {
-                gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
-                vTextureCoord = aTextureCoord;
-            }
-        </script>
-
     </head>
     <body>
         <canvas id="webgl_box" style="
@@ -53,7 +25,7 @@ and open the template in the editor.
         <script type="text/javascript">
 
                 var webGlScene = new WebGL();
-                var textPath = "resources/img/blizzard.jpg";
+                var textPath = "resources/img/glass.jpg";
                 webGlScene.init('webgl_box')
                         .Shader
                             .Add("resources/shaders/fragment/shader-fs-light.sx", "fragment")
@@ -67,27 +39,32 @@ and open the template in the editor.
                             }).Instance()
                         .Lighting
                             .Directed
-                                .Vector([-1, -0.2, -0.4]).Parent().Instance();
+                                .Vector([-0.25, -0.25, -1]).Parent().Instance();
                 for(var i in arPolygons){
-                    webGlScene.Items
-                        .Add(new GLItem(webGlScene))
-                            .Texture.Set(
-                                arTextCoors,
-                                webGlScene.Textures.Get(textPath)).Instance()
-                            .Vertices.Set(
-                                arPolygons[i],
-                                webGlScene.gl.TRIANGLES).Instance()
-                            .Normal.Set(
-                                arNormals[i]).Instance()
-                            .Position
-                                .Set(arPos)
-                                .Translate([0.0,0.0,0.0]).Instance();
+                        webGlScene.Items
+                            .Add(new GLItem(webGlScene))
+                                .Texture.Set(
+                                    arTextCoors,
+                                    webGlScene.Textures.Get(textPath)).Instance()
+                                .Vertices.Set(
+                                    arPolygons[i],
+                                    webGlScene.gl.TRIANGLES).Instance()
+                                .Normal.Set(
+                                    arNormals[i]).Instance()
+                                .Position
+                                    .Set(arPos)
+                                    .Translate([0.0,0.0,0.0]).Instance()
+                                .Parameters
+                                    .Depth
+                                        .Disable().Parent()
+                                    .Blend
+                                        .Enable().Parent().Instance();
                 };
 
                 var a = 0;
                 function tick() {
                     reqAFrame(tick);
-                    a += 0.5;
+                        a += 0.1;
                     webGlScene
                             .Items
                                 .Rotate(a, [1, 1, 0]).Instance()

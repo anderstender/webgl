@@ -69,6 +69,7 @@ var GLItem = function(wGL){
             'enableColor'     : false,
             'enableTexture'   : true,
             'enableLight'     : true,
+            'enableBlend'     : true
         };
 
 
@@ -113,6 +114,9 @@ var GLItem = function(wGL){
                 Shaders.program.ambientColorUniform = Parent.gl.getUniformLocation(Shaders.program, "uAmbientColor");
                 Shaders.program.lightingDirectionUniform = Parent.gl.getUniformLocation(Shaders.program, "uLightingDirection");
                 Shaders.program.directionalColorUniform = Parent.gl.getUniformLocation(Shaders.program, "uDirectionalColor");
+
+                Shaders.program.useBlendUniform = Parent.gl.getUniformLocation(Shaders.program, "useBlend");
+                Shaders.program.alphaUniform = Parent.gl.getUniformLocation(Shaders.program, "uAlpha");
             }
             Shaders.isInit = true;
             return Shaders;
@@ -282,7 +286,52 @@ var GLItem = function(wGL){
             return Parent;
         };
     });
-    
+    this.Parameters = new (function () {
+        var Parameters = this;
+        this.Depth = new(function () {
+            var Depth = this;
+            this.params = {
+                enabled : false
+            };
+            this.Enable = function () {
+                Depth.params.enabled = true;
+                return Depth;
+            };
+            this.Disable = function () {
+                Depth.params.enabled = false;
+                return Depth;
+            };
+            this.Parent = function () {
+                return Parameters;
+            };
+        });
+
+        this.Blend = new (function () {
+            var Blend = this;
+            this.params = {
+                enabled : false,
+                alpha : 0.5
+            };
+
+            this.Enable = function () {
+                Blend.params.enabled = true;
+                return Blend;
+            };
+            this.Disable = function () {
+                Blend.params.enabled = false;
+                return Blend;
+            };
+            this.Parent = function () {
+                return Parameters;
+            };
+        });
+
+
+        this.Instance = function(){
+            return Parent;
+        };
+    });
+
     this.Colors = new (function(){
         var Colors = this;
         this.coords = [];
