@@ -65,13 +65,10 @@ var GLItem = function(wGL){
         this.program = null;
         this.isInit = false;
         this.params = {
-            //параметры для передачи вершин в шейдеры
             'aVertexPosition' : true,
-            'aVertexColor'    : true,
-            'aTextureCoord'   : true,
+            'enableColor'     : false,
+            'enableTexture'   : true,
             'enableLight'     : true,
-            //параметры для передачи матриц
-            'uSampler'  : true
         };
 
 
@@ -84,42 +81,38 @@ var GLItem = function(wGL){
             * чекаем что установлен список вершин
             * */
             if(Parent.Vertices.isInit) {
-                if (Shaders.params.aVertexPosition) {
-                    Shaders.program.vertexPositionAttribute = Parent.gl.getAttribLocation(Shaders.program, "aVertexPosition");
-                    Parent.gl.enableVertexAttribArray(Shaders.program.vertexPositionAttribute);
-                }
+                Shaders.program.vertexPositionAttribute = Parent.gl.getAttribLocation(Shaders.program, "aVertexPosition");
+                Parent.gl.enableVertexAttribArray(Shaders.program.vertexPositionAttribute);
 
-
-
-                if (Shaders.params.aTextureCoord
-                    && Shaders.params.uSampler
-                    && Parent.Texture.isSet) {
-                    Shaders.program.textureCoordAttribute = Parent.gl.getAttribLocation(Shaders.program, "aTextureCoord");
-                    Parent.gl.enableVertexAttribArray(Shaders.program.textureCoordAttribute);
-
-                    Shaders.program.samplerUniforms = Parent.gl.getUniformLocation(Shaders.program, "uSampler");
-                }
-
-                if (Shaders.params.aVertexColor) {
+                if (Shaders.params.enableColor) {
                     Shaders.program.vertexColorAttribute = Parent.gl.getAttribLocation(Shaders.program, "aVertexColor");
                     Parent.gl.enableVertexAttribArray(Shaders.program.vertexColorAttribute);
                 }
 
-
-                Shaders.program.pMatrixUniform = Parent.gl.getUniformLocation(Shaders.program, "uPMatrix");
-                Shaders.program.mvMatrixUniform = Parent.gl.getUniformLocation(Shaders.program, "uMVMatrix");
-
+                if (Shaders.params.enableTexture && Parent.Texture.isSet) {
+                    Shaders.program.textureCoordAttribute = Parent.gl.getAttribLocation(Shaders.program, "aTextureCoord");
+                    Parent.gl.enableVertexAttribArray(Shaders.program.textureCoordAttribute);
+                }
 
                 if(Shaders.params.enableLight){
                     Shaders.program.vertexNormalAttribute = Parent.gl.getAttribLocation(Shaders.program, "aVertexNormal");
                     Parent.gl.enableVertexAttribArray(Shaders.program.vertexNormalAttribute);
-
-                    Shaders.program.nMatrixUniform = Parent.gl.getUniformLocation(Shaders.program, "uNMatrix");
-                    Shaders.program.useLightingUniform = Parent.gl.getUniformLocation(Shaders.program, "uUseLighting");
-                    Shaders.program.ambientColorUniform = Parent.gl.getUniformLocation(Shaders.program, "uAmbientColor");
-                    Shaders.program.lightingDirectionUniform = Parent.gl.getUniformLocation(Shaders.program, "uLightingDirection");
-                    Shaders.program.directionalColorUniform = Parent.gl.getUniformLocation(Shaders.program, "uDirectionalColor");
                 }
+
+
+                Shaders.program.useColorUniform = Parent.gl.getUniformLocation(Shaders.program, "uUseColor");
+
+                Shaders.program.pMatrixUniform = Parent.gl.getUniformLocation(Shaders.program, "uPMatrix");
+                Shaders.program.mvMatrixUniform = Parent.gl.getUniformLocation(Shaders.program, "uMVMatrix");
+
+                Shaders.program.useTextureUniform = Parent.gl.getUniformLocation(Shaders.program, "uUseTexture");
+                Shaders.program.samplerUniforms = Parent.gl.getUniformLocation(Shaders.program, "uSampler");
+
+                Shaders.program.nMatrixUniform = Parent.gl.getUniformLocation(Shaders.program, "uNMatrix");
+                Shaders.program.useLightingUniform = Parent.gl.getUniformLocation(Shaders.program, "uUseLighting");
+                Shaders.program.ambientColorUniform = Parent.gl.getUniformLocation(Shaders.program, "uAmbientColor");
+                Shaders.program.lightingDirectionUniform = Parent.gl.getUniformLocation(Shaders.program, "uLightingDirection");
+                Shaders.program.directionalColorUniform = Parent.gl.getUniformLocation(Shaders.program, "uDirectionalColor");
             }
             Shaders.isInit = true;
             return Shaders;
@@ -173,29 +166,31 @@ var GLItem = function(wGL){
         this.isSet = false;
 
         this.Bind = function(){
-            Parent.gl.bindTexture(Parent.gl.TEXTURE_2D, Texture.texture);
+            if(Parent.Shaders.params.enableTexture) {
+                Parent.gl.bindTexture(Parent.gl.TEXTURE_2D, Texture.texture);
 
-            Parent.gl.pixelStorei(Parent.gl.UNPACK_FLIP_Y_WEBGL, true);
+                Parent.gl.pixelStorei(Parent.gl.UNPACK_FLIP_Y_WEBGL, true);
 
-            Parent.gl.texImage2D(
-                Parent.gl.TEXTURE_2D,
-                0,
-                Parent.gl.RGBA,
-                Parent.gl.RGBA,
-                Parent.gl.UNSIGNED_BYTE,
-                Texture.texture.image);
+                Parent.gl.texImage2D(
+                    Parent.gl.TEXTURE_2D,
+                    0,
+                    Parent.gl.RGBA,
+                    Parent.gl.RGBA,
+                    Parent.gl.UNSIGNED_BYTE,
+                    Texture.texture.image);
 
-            Parent.gl.texParameteri(
-                Parent.gl.TEXTURE_2D,
-                Parent.gl.TEXTURE_MAG_FILTER,
-                Parent.gl.NEAREST);
+                Parent.gl.texParameteri(
+                    Parent.gl.TEXTURE_2D,
+                    Parent.gl.TEXTURE_MAG_FILTER,
+                    Parent.gl.NEAREST);
 
-            Parent.gl.texParameteri(
-                Parent.gl.TEXTURE_2D,
-                Parent.gl.TEXTURE_MIN_FILTER,
-                Parent.gl.NEAREST);
-            Parent.gl.generateMipmap( Parent.gl.TEXTURE_2D);
-            Parent.gl.bindTexture(Parent.gl.TEXTURE_2D, null);
+                Parent.gl.texParameteri(
+                    Parent.gl.TEXTURE_2D,
+                    Parent.gl.TEXTURE_MIN_FILTER,
+                    Parent.gl.NEAREST);
+                Parent.gl.generateMipmap(Parent.gl.TEXTURE_2D);
+                Parent.gl.bindTexture(Parent.gl.TEXTURE_2D, null);
+            }
             return Texture;
         };
 
@@ -210,8 +205,7 @@ var GLItem = function(wGL){
 
             Texture.texture = texture;
 
-            if(Parent.Shaders.params.aTextureCoord
-                && Parent.Shaders.params.uSampler) {
+            if(Parent.Shaders.params.enableTexture) {
 
                 Parent.gl.bindBuffer(Parent.gl.ARRAY_BUFFER, Texture.buffer);//buffer
                 Parent.gl.bufferData(Parent.gl.ARRAY_BUFFER, new Float32Array(Texture.coords),Parent.gl.STATIC_DRAW);
@@ -250,12 +244,12 @@ var GLItem = function(wGL){
             if(Parent.Colors.coords.length === 0){
                 var colors = [];
                 for(var i=0;i < Vertices.buffer.numItems; i++){
-                    colors = colors.concat([1.0, 1.0, 1.0, 1.0]);
+                    colors = colors.concat([1.0, 0.0, 0.0, 1.0]);
                 }
                 Parent.Colors.Set(colors);
             }
 
-
+            Vertices.indexes = [];
             for(var i = 1; i < Vertices.buffer.numItems - 1; i++){
                 Vertices.indexes[Vertices.indexes.length] = 0;
                 Vertices.indexes[Vertices.indexes.length] = i;
@@ -264,24 +258,20 @@ var GLItem = function(wGL){
             Vertices.indexBuffer.numItems = Vertices.indexes.length;
             Vertices.indexBuffer.itemSize = 1;
 
+            //ставим координаты вершин
+            Parent.gl.bindBuffer(Parent.gl.ARRAY_BUFFER,
+                Vertices.buffer);
 
-            if(Parent.Shaders.params.aVertexPosition) {
-                //ставим координаты вершин
-                Parent.gl.bindBuffer(Parent.gl.ARRAY_BUFFER,
-                    Vertices.buffer);
-
-                Parent.gl.bufferData(Parent.gl.ARRAY_BUFFER,
-                    new Float32Array(Vertices.coords),
-                    Parent.gl.STATIC_DRAW);
+            Parent.gl.bufferData(Parent.gl.ARRAY_BUFFER,
+                new Float32Array(Vertices.coords),
+                Parent.gl.STATIC_DRAW);
 
 
-                Parent.gl.bindBuffer(Parent.gl.ELEMENT_ARRAY_BUFFER,
-                    Vertices.indexBuffer);
-                Parent.gl.bufferData(Parent.gl.ELEMENT_ARRAY_BUFFER,
-                    new Uint16Array(Vertices.indexes),
-                    Parent.gl.STATIC_DRAW);
-            }
-
+            Parent.gl.bindBuffer(Parent.gl.ELEMENT_ARRAY_BUFFER,
+                Vertices.indexBuffer);
+            Parent.gl.bufferData(Parent.gl.ELEMENT_ARRAY_BUFFER,
+                new Uint16Array(Vertices.indexes),
+                Parent.gl.STATIC_DRAW);
 
             Vertices.glType = glType;
             Vertices.isInit = true;
@@ -307,7 +297,7 @@ var GLItem = function(wGL){
             Colors.buffer.numItems = Colors.numItems;
             Colors.buffer.itemSize = Colors.itemSize;
 
-            if(Parent.Shaders.params.aVertexColor) {
+            if(Parent.Shaders.params.enableColor) {
                 //натягиваем цвет
                 Parent.gl.bindBuffer(Parent.gl.ARRAY_BUFFER, Colors.buffer);
                 Parent.gl.bufferData(Parent.gl.ARRAY_BUFFER, new Float32Array(Colors.coords), Parent.gl.STATIC_DRAW);

@@ -276,17 +276,13 @@
                 mat4.multiply(Item.mvMatrix, Item.Rotate.matrix);
             }
 
-            if(Item.Shaders.params.aVertexPosition) {
-                //ставим координаты вершин
-                parent.gl.bindBuffer(parent.gl.ARRAY_BUFFER,
-                    Item.Vertices.buffer);
+            parent.gl.bindBuffer(parent.gl.ARRAY_BUFFER,Item.Vertices.buffer);
+            parent.gl.vertexAttribPointer(Item.Shaders.program.vertexPositionAttribute, Item.Vertices.buffer.itemSize, parent.gl.FLOAT, false, 0, 0);
 
-                parent.gl.vertexAttribPointer(Item.Shaders.program.vertexPositionAttribute,
-                    Item.Vertices.buffer.itemSize,
-                    parent.gl.FLOAT, false, 0, 0);
-            }
-            if(Item.Shaders.params.aVertexColor) {
+
+            if(Item.Shaders.params.enableColor) {
                 //натягиваем цвет
+                //console.log(Item.Colors.buffer);
                 parent.gl.bindBuffer(parent.gl.ARRAY_BUFFER,
                     Item.Colors.buffer);
 
@@ -295,23 +291,25 @@
                     parent.gl.FLOAT,
                     false, 0, 0);
             }
+            parent.gl.uniform1i(Item.Shaders.program.useColorUniform, Item.Shaders.params.enableColor);
 
 
 
-            if(Item.Shaders.params.aTextureCoord
-                && Item.Shaders.params.uSampler
+
+
+            if(Item.Shaders.params.enableTexture
                 && Item.Texture.isSet) {
-                parent.gl.bindBuffer(
-                    parent.gl.ARRAY_BUFFER,
-                    Item.Texture.buffer);//buffer
-                parent.gl.vertexAttribPointer(
-                    Item.Shaders.program.textureCoordAttribute,
-                    Item.Texture.buffer.itemSize,
-                    parent.gl.FLOAT, false, 0, 0);
+                parent.gl.bindBuffer(parent.gl.ARRAY_BUFFER, Item.Texture.buffer);//buffer
+                parent.gl.vertexAttribPointer(Item.Shaders.program.textureCoordAttribute, Item.Texture.buffer.itemSize, parent.gl.FLOAT, false, 0, 0);
+
                 parent.gl.activeTexture(parent.gl.TEXTURE0);
                 parent.gl.bindTexture(parent.gl.TEXTURE_2D, Item.Texture.texture);
                 parent.gl.uniform1i(Item.Shaders.program.samplerUniform, 0);
             }
+            parent.gl.uniform1i(Item.Shaders.program.useTextureUniform, Item.Shaders.params.enableTexture);
+
+
+
 
             if(Item.Shaders.params.enableLight) {
 
@@ -321,7 +319,7 @@
                     parent.gl.FLOAT,
                     false, 0, 0);
 
-                parent.gl.uniform1i(Item.Shaders.program.useLightingUniform, true);
+
                 parent.gl.uniform3f(
                     Item.Shaders.program.ambientColorUniform,
                     parent.Lighting.params.directed.color.ambient[0],
@@ -341,6 +339,8 @@
                     parent.Lighting.params.directed.color.direction[2]
                 );
             }
+            parent.gl.uniform1i(Item.Shaders.program.useLightingUniform, Item.Shaders.params.enableLight);
+
 
             parent.gl.bindBuffer(parent.gl.ELEMENT_ARRAY_BUFFER, Item.Vertices.indexBuffer);
             parent.Items.setMatUniform(Item);

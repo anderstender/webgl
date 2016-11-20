@@ -15,7 +15,7 @@ and open the template in the editor.
         <script type="text/javascript" src="js/items.js"></script>
 
         <script type="text/javascript" src="data/variables.js"></script>
-        <script id="shader-fs-texture" type="x-shader/x-fragment">
+         <script id="shader-fs-texture" type="x-shader/x-fragment">
             precision mediump float;
 
             varying vec2 vTextureCoord;
@@ -84,11 +84,10 @@ and open the template in the editor.
                                 .Translate([0.0,0.0,0.0]).Instance();
                 };
 
-                var a = 1;
+                var a = 0;
                 function tick() {
                     reqAFrame(tick);
                     a += 0.5;
-                    
                     webGlScene
                             .Items
                                 .Rotate(a, [1, 1, 0]).Instance()
@@ -101,7 +100,7 @@ and open the template in the editor.
                             window.oRequestAnimationFrame ||
                             window.msRequestAnimationFrame ||
                             function(callback) {
-                                window.setTimeout(callback, 1000/20);
+                                window.setTimeout(callback, 1000/60);
                             };
                 })();
         </script>
