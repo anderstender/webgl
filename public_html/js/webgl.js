@@ -202,6 +202,14 @@
                     direction : [0.8, 0.8, 0.8]
                 },
                 vector : [-0.25, -0.25, -1]
+            },
+            point :{
+                color :{
+                    ambient : [0.2, 0.2, 0.2],
+                    direction : [0.8, 0.8, 0.8]
+                },
+                coord :[0,0,-5]
+
             }
         };
 
@@ -306,7 +314,8 @@
                 parent.gl.bindTexture(parent.gl.TEXTURE_2D, Item.Texture.texture);
                 parent.gl.uniform1i(Item.Shaders.program.samplerUniform, 0);
             }
-            parent.gl.uniform1i(Item.Shaders.program.useTextureUniform, Item.Shaders.params.enableTexture);
+            parent.gl.uniform1i(Item.Shaders.program.useTextureUniform, Item.Shaders.params.enableTexture
+                && Item.Texture.isSet);
 
 
 
@@ -322,10 +331,12 @@
 
                 parent.gl.uniform3f(
                     Item.Shaders.program.ambientColorUniform,
-                    parent.Lighting.params.directed.color.ambient[0],
-                    parent.Lighting.params.directed.color.ambient[1],
-                    parent.Lighting.params.directed.color.ambient[2]
+                    parent.Lighting.params.point.color.ambient[0],
+                    parent.Lighting.params.point.color.ambient[1],
+                    parent.Lighting.params.point.color.ambient[2]
                 );
+
+
 
                 var adjustedLD = vec3.create();
                 vec3.normalize(parent.Lighting.params.directed.vector, adjustedLD);
@@ -333,10 +344,17 @@
                 parent.gl.uniform3fv(Item.Shaders.program.lightingDirectionUniform, adjustedLD);
 
                 parent.gl.uniform3f(
-                    Item.Shaders.program.directionalColorUniform,
-                    parent.Lighting.params.directed.color.direction[0],
-                    parent.Lighting.params.directed.color.direction[1],
-                    parent.Lighting.params.directed.color.direction[2]
+                    Item.Shaders.program.pointLightingColorUniform,
+                    parent.Lighting.params.point.color.direction[0],
+                    parent.Lighting.params.point.color.direction[1],
+                    parent.Lighting.params.point.color.direction[2]
+                );
+
+                parent.gl.uniform3f(
+                    Item.Shaders.program.pointLightingLocationUniform,
+                    parent.Lighting.params.point.coord[0],
+                    parent.Lighting.params.point.coord[1],
+                    parent.Lighting.params.point.coord[2]
                 );
             }
             parent.gl.uniform1i(Item.Shaders.program.useLightingUniform, Item.Shaders.params.enableLight);

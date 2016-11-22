@@ -3,22 +3,52 @@
     varying vec2 vTextureCoord;
     varying vec3 vLightWeighting;
     varying vec4 vColor;
+    varying vec4 vPosition;
+    varying vec3 vTransformedNormal;
+
 
     uniform sampler2D uSampler;
     uniform bool uUseTexture;
     uniform float uAlpha;
     uniform bool useBlend;
+    uniform bool uUseLighting;
+    uniform bool uUseColor;
 
+    uniform vec3 uPointLightingLocation;
+    uniform vec3 uPointLightingColor;
+
+    uniform vec3 uAmbientColor;
     void main(void) {
-        vec4 textureColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
-        float alpha = uAlpha;
-        if(!useBlend){
+        vec3 lightWeighting;
+        if (!uUseLighting) {
+            lightWeighting = vec3(1.0, 1.0, 1.0);
+        } else {
+            vec3 lightDirection = normalize(uPointLightingLocation - vPosition.xyz);
+
+            float directionalLightWeighting = max(dot(normalize(vTransformedNormal), lightDirection), 0.0);
+            lightWeighting = uAmbientColor + uPointLightingColor * directionalLightWeighting;
+        }
+
+        vec4 fragmentColor;
+        if (uUseTexture) {
+            fragmentColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+        } else {
+            fragmentColor = vec4(1.0, 1.0, 1.0, 1.0);
+        }
+
+        vec4 color;
+        if(uUseColor){
+            color = vColor;
+        }else{
+            color = vec4(1.0, 1.0, 1.0, 1.0);
+        }
+
+        float alpha;
+        if(useBlend){
+            alpha = uAlpha;
+        }else{
             alpha = 1.0;
         }
 
-        if(uUseTexture){
-            gl_FragColor = vec4(textureColor.rgb * vLightWeighting, textureColor.a * alpha) * vColor;
-        }else{
-            gl_FragColor = vec4(vLightWeighting, vColor.a * uAlpha) * vColor;
-        }
+        gl_FragColor = vec4(fragmentColor.rgb * lightWeighting, fragmentColor.a * alpha) * color;
     }

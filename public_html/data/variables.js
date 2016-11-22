@@ -1,4 +1,4 @@
-var arPos = [0.0, 0.0, -4.0];
+var arPos = [0.0, 0.0, -5.0];
 var  arPolygons = [
     // Front face
     [
@@ -92,7 +92,7 @@ var arNormals = [
         -1.0,  0.0,  0.0
     ]
 ];
-var arTextCoors = [
+var arTextCoords = [
     0.0, 0.0,
     1.0, 0.0,
     1.0, 1.0,

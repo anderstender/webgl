@@ -67,9 +67,9 @@ var GLItem = function(wGL){
         this.params = {
             'aVertexPosition' : true,
             'enableColor'     : false,
-            'enableTexture'   : true,
+            'enableTexture'   : false,
             'enableLight'     : true,
-            'enableBlend'     : true
+            'enableBlend'     : false
         };
 
 
@@ -110,10 +110,15 @@ var GLItem = function(wGL){
                 Shaders.program.samplerUniforms = Parent.gl.getUniformLocation(Shaders.program, "uSampler");
 
                 Shaders.program.nMatrixUniform = Parent.gl.getUniformLocation(Shaders.program, "uNMatrix");
+
                 Shaders.program.useLightingUniform = Parent.gl.getUniformLocation(Shaders.program, "uUseLighting");
                 Shaders.program.ambientColorUniform = Parent.gl.getUniformLocation(Shaders.program, "uAmbientColor");
                 Shaders.program.lightingDirectionUniform = Parent.gl.getUniformLocation(Shaders.program, "uLightingDirection");
                 Shaders.program.directionalColorUniform = Parent.gl.getUniformLocation(Shaders.program, "uDirectionalColor");
+
+                Shaders.program.pointLightingLocationUniform = Parent.gl.getUniformLocation(Shaders.program, "uPointLightingLocation");
+                Shaders.program.pointLightingColorUniform  = Parent.gl.getUniformLocation(Shaders.program, "uPointLightingColor");
+
 
                 Shaders.program.useBlendUniform = Parent.gl.getUniformLocation(Shaders.program, "useBlend");
                 Shaders.program.alphaUniform = Parent.gl.getUniformLocation(Shaders.program, "uAlpha");
@@ -167,6 +172,9 @@ var GLItem = function(wGL){
         this.numItems = 0;
         this.itemSize = 2;
         this.buffer = Parent.gl.createBuffer();
+        this.buffer.numItems = 0;
+        this.buffer.itemSize = 2;
+
         this.isSet = false;
 
         this.Bind = function(){
@@ -199,17 +207,17 @@ var GLItem = function(wGL){
         };
 
         this.Set = function(coords, texture){
-
-            Texture.coords = coords;
-
-            Texture.numItems = parseInt(Texture.coords.length / Texture.itemSize);
-            Texture.buffer.numItems = Texture.numItems;
-            Texture.buffer.itemSize = Texture.itemSize;
-            Texture.isInit = true;
-
-            Texture.texture = texture;
-
             if(Parent.Shaders.params.enableTexture) {
+                Texture.coords = coords;
+
+                Texture.numItems = parseInt(Texture.coords.length / Texture.itemSize);
+                Texture.buffer.numItems = Texture.numItems;
+                Texture.buffer.itemSize = Texture.itemSize;
+                Texture.isInit = true;
+
+                Texture.texture = texture;
+
+
 
                 Parent.gl.bindBuffer(Parent.gl.ARRAY_BUFFER, Texture.buffer);//buffer
                 Parent.gl.bufferData(Parent.gl.ARRAY_BUFFER, new Float32Array(Texture.coords),Parent.gl.STATIC_DRAW);
@@ -291,7 +299,7 @@ var GLItem = function(wGL){
         this.Depth = new(function () {
             var Depth = this;
             this.params = {
-                enabled : false
+                enabled : true
             };
             this.Enable = function () {
                 Depth.params.enabled = true;

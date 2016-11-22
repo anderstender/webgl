@@ -44,7 +44,7 @@ and open the template in the editor.
                         webGlScene.Items
                             .Add(new GLItem(webGlScene))
                                 .Texture.Set(
-                                    arTextCoors,
+                                    arTextCoords,
                                     webGlScene.Textures.Get(textPath)).Instance()
                                 .Vertices.Set(
                                     arPolygons[i],
@@ -53,12 +53,7 @@ and open the template in the editor.
                                     arNormals[i]).Instance()
                                 .Position
                                     .Set(arPos)
-                                    .Translate([0.0,0.0,0.0]).Instance()
-                                .Parameters
-                                    .Depth
-                                        .Disable().Parent()
-                                    .Blend
-                                        .Enable().Parent().Instance();
+                                    .Translate([0.0,0.0,-1.2]).Instance();
                 };
 
                 var a = 0;
