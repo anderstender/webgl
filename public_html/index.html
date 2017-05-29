@@ -30,22 +30,22 @@ and open the template in the editor.
                         .Shader
                             .Add("resources/shaders/fragment/shader-fs-light.sx", "fragment")
                             .Add("resources/shaders/vertex/shader-vs-light.sx", "vertex").Instance()
-                        /*.Textures
+                        .Textures
                             .Add(textPath)
                             .Load(function(){
                                 webGlScene.Textures.Exec();
                                 webGlScene.Shader.Init();
                                 tick();
-                            }).Instance()/**/
+                            }).Instance()
                         .Lighting
                             .Directed
                                 .Vector([-0.25, -0.25, -1]).Parent().Instance();
                 for(var i in arPolygons){
                         webGlScene.Items
                             .Add(new GLItem(webGlScene))
-                                .Texture.Set(
+                                /*.Texture.Set(
                                     arTextCoords,
-                                    webGlScene.Textures.Get(textPath)).Instance()
+                                    webGlScene.Textures.Get(textPath)).Instance()*/
                                 .Vertices.Set(
                                     arPolygons[i],
                                     webGlScene.gl.TRIANGLES).Instance()
