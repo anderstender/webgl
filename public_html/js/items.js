@@ -67,8 +67,8 @@ var GLItem = function(wGL){
         this.params = {
             'aVertexPosition' : true,
             'enableColor'     : false,
-            'enableTexture'   : false,
-            'enableLight'     : true,
+            'enableTexture'   : true,
+            'enableLight'     : false,
             'enableBlend'     : false
         };
 
@@ -94,6 +94,7 @@ var GLItem = function(wGL){
                     Shaders.program.textureCoordAttribute = Parent.gl.getAttribLocation(Shaders.program, "aTextureCoord");
                     Parent.gl.enableVertexAttribArray(Shaders.program.textureCoordAttribute);
                 }
+
 
                 if(Shaders.params.enableLight){
                     Shaders.program.vertexNormalAttribute = Parent.gl.getAttribLocation(Shaders.program, "aVertexNormal");
