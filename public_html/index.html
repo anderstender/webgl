@@ -37,9 +37,9 @@ and open the template in the editor.
                                 webGlScene.Shader.Init();
                                 tick();
                             }).Instance()
-                        .Lighting
+                        /*.Lighting
                             .Directed
-                                .Vector([-0.25, -0.25, -1]).Parent().Instance();
+                                .Vector([-0.25, -0.25, -1]).Parent().Instance()/**/;
                 for(var i in arPolygons){
                         webGlScene.Items
                             .Add(new GLItem(webGlScene))
