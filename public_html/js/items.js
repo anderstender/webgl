@@ -66,9 +66,9 @@ var GLItem = function(wGL){
         this.isInit = false;
         this.params = {
             'aVertexPosition' : true,
-            'enableColor'     : false,
+            'enableColor'     : true,
             'enableTexture'   : true,
-            'enableLight'     : false,
+            'enableLight'     : true,
             'enableBlend'     : false
         };
 

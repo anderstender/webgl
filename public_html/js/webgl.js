@@ -25,7 +25,7 @@
         if(!canvas){
             return false;
         };
-        var names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];//хуита по-разному названа в браузерах
+        var names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];//по-разному названа в браузерах
         for(var i in names){
             try{
                 parent.gl = canvas.getContext(names[i]);
@@ -42,7 +42,6 @@
         }else{
             console.error('Could not initialise WebGL.');
             console.error('---------------');
-            th
         }
         return parent;
     };
