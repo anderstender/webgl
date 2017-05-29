@@ -25,7 +25,25 @@ and open the template in the editor.
         <script type="text/javascript">
 
                 var webGlScene = new WebGL();
-                var textPath = "resources/img/blizzard.jpg";
+                var textPath = "resources/img/glass.jpg";
+                for(var i in arPolygons){
+                    webGlScene.Items
+                        .Add(new GLItem(webGlScene))
+                        .Texture.Set(
+                        arTextCoords,
+                        webGlScene.Textures.Get(textPath)).Instance()
+                        .Vertices.Set(
+                        arPolygons[i],
+                        webGlScene.gl.TRIANGLES).Instance()
+                        .Normal.Set(
+                        arNormals[i]).Instance()
+                        .Position
+                        .Set(arPos)
+                        .Translate([0.0,0.0,0]).Instance();
+                };
+
+
+
                 webGlScene.init('webgl_box')
                         .Shader
                             .Add("resources/shaders/fragment/shader-fs-texture.sx", "fragment")
@@ -40,21 +58,7 @@ and open the template in the editor.
                         /*.Lighting
                             .Directed
                                 .Vector([-0.25, -0.25, -1]).Parent().Instance()/**/;
-                for(var i in arPolygons){
-                        webGlScene.Items
-                            .Add(new GLItem(webGlScene))
-                                .Texture.Set(
-                                    arTextCoords,
-                                    webGlScene.Textures.Get(textPath)).Instance()
-                                .Vertices.Set(
-                                    arPolygons[i],
-                                    webGlScene.gl.TRIANGLES).Instance()
-                                .Normal.Set(
-                                    arNormals[i]).Instance()
-                                .Position
-                                    .Set(arPos)
-                                    .Translate([0.0,0.0,0]).Instance();
-                };
+
 
                 var a = 0;
                 function tick() {
