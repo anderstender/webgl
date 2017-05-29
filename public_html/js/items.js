@@ -137,6 +137,8 @@ var GLItem = function(wGL){
         this.coords = [];
         this.numItems = 0;
         this.itemSize = 3;
+        console.log(Parent);
+
         this.buffer = Parent.gl.createBuffer();
         this.isSet = false;
 
