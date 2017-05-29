@@ -28,12 +28,12 @@ and open the template in the editor.
                 var textPath = "resources/img/blizzard.jpg";
                 webGlScene.init('webgl_box')
                         .Shader
-                            .Add("resources/shaders/fragment/shader-fs-light.sx", "fragment")
-                            .Add("resources/shaders/vertex/shader-vs-light.sx", "vertex").Instance()
+                            .Add("resources/shaders/fragment/shader-fs-texture.sx", "fragment")
+                            .Add("resources/shaders/vertex/shader-vs-texture.sx", "vertex").Instance()
                         .Textures
                             .Add(textPath)
                             .Load(function(){
-                               // webGlScene.Textures.Exec();
+                                webGlScene.Textures.Exec();
                                 webGlScene.Shader.Init();
                                 tick();
                             }).Instance()
@@ -43,9 +43,9 @@ and open the template in the editor.
                 for(var i in arPolygons){
                         webGlScene.Items
                             .Add(new GLItem(webGlScene))
-                                /*.Texture.Set(
+                                .Texture.Set(
                                     arTextCoords,
-                                    webGlScene.Textures.Get(textPath)).Instance()*/
+                                    webGlScene.Textures.Get(textPath)).Instance()
                                 .Vertices.Set(
                                     arPolygons[i],
                                     webGlScene.gl.TRIANGLES).Instance()
