@@ -30,13 +30,13 @@ and open the template in the editor.
                         .Shader
                             .Add("resources/shaders/fragment/shader-fs-light.sx", "fragment")
                             .Add("resources/shaders/vertex/shader-vs-light.sx", "vertex").Instance()
-                        .Textures
+                        /*.Textures
                             .Add(textPath)
                             .Load(function(){
                                 webGlScene.Textures.Exec();
                                 webGlScene.Shader.Init();
                                 tick();
-                            }).Instance()
+                            }).Instance()/**/
                         .Lighting
                             .Directed
                                 .Vector([-0.25, -0.25, -1]).Parent().Instance();
