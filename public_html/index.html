@@ -27,9 +27,6 @@ and open the template in the editor.
                 var webGlScene = new WebGL();
                 var textPath = "resources/img/glass.jpg";
 
-
-
-
                 webGlScene.init('webgl_box')
                         .Shader
                             .Add("resources/shaders/fragment/shader-fs-light.sx", "fragment")
@@ -48,17 +45,17 @@ and open the template in the editor.
                 for(var i in arPolygons){
                     webGlScene.Items
                         .Add(new GLItem(webGlScene))
-                        .Texture.Set(
-                        arTextCoords,
-                        webGlScene.Textures.Get(textPath)).Instance()
-                        .Vertices.Set(
-                        arPolygons[i],
-                        webGlScene.gl.TRIANGLES).Instance()
-                        .Normal.Set(
-                        arNormals[i]).Instance()
-                        .Position
-                        .Set(arPos)
-                        .Translate([0.0,0.0,0]).Instance();
+                            .Texture.Set(
+                                arTextCoords,
+                                webGlScene.Textures.Get(textPath)).Instance()
+                            .Vertices.Set(
+                                arPolygons[i],
+                                webGlScene.gl.TRIANGLES).Instance()
+                            .Normal.Set(
+                                arNormals[i]).Instance()
+                            .Position
+                                .Set(arPos)
+                                    .Translate([0.0,0.0,0]).Instance();
                 };
 
 
