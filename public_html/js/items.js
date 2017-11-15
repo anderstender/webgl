@@ -259,7 +259,7 @@ var GLItem = function(wGL){
             if(Parent.Colors.coords.length === 0){
                 var colors = [];
                 for(var i=0;i < Vertices.buffer.numItems; i++){
-                    colors = colors.concat([1.0, 0.0, 0.0, 1.0]);
+                    colors = colors.concat([1.0, 1.0, 1.0, 1.0]);
                 }
                 Parent.Colors.Set(colors);
             }
