@@ -29,8 +29,8 @@ and open the template in the editor.
 
                 webGlScene.init('webgl_box')
                         .Shader
-                            .Add("resources/shaders/fragment/shader-fs-light.sx", "fragment")
-                            .Add("resources/shaders/vertex/shader-vs-light.sx", "vertex").Instance()
+                            .Add("resources/shaders/fragment/shader-fs-texture.sx", "fragment")
+                            .Add("resources/shaders/vertex/shader-vs-texture.sx", "vertex").Instance()
                         .Textures
                             .Add(textPath)
                             .Load(function(){
